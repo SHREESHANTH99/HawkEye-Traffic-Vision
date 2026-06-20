@@ -10,6 +10,7 @@ export default function DetectionPanel({ settings, onViolationsUpdate }) {
   const [currentViolations, setCurrentViolations] = useState([]);
   const [progress, setProgress] = useState(0);
   const [processingVideo, setProcessingVideo] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
   
   const streamRef = useRef(null);
 
@@ -33,32 +34,39 @@ export default function DetectionPanel({ settings, onViolationsUpdate }) {
 
     if (settings.inputMode === 'image') {
       await processImage(selectedFile);
+    } else if (settings.inputMode === 'video') {
+      startVideoProcessing(selectedFile);
     }
   };
 
   const processImage = async (imageFile) => {
     setLoading(true);
+    setStatusMessage('Uploading image for detection...');
     try {
       const data = await detectImage(imageFile, settings);
       setResultImage(data.annotated_image_b64);
       setCurrentViolations(data.violations || []);
       onViolationsUpdate(data.violations || []);
+      setStatusMessage('Image processed successfully.');
     } catch (err) {
       setError(err.message);
+      setStatusMessage('Image processing failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  const startVideoProcessing = () => {
-    if (!file) return;
+  const startVideoProcessing = (videoFile = file) => {
+    if (!videoFile) return;
     setProcessingVideo(true);
     setError(null);
+    setStatusMessage('Uploading video and starting detection...');
     setProgress(0);
     setCurrentViolations([]);
     
     streamRef.current = streamVideoDetection(
-      file,
+      videoFile,
+      settings,
       (data) => {
         if (data.annotated_image_b64) {
           setResultImage(data.annotated_image_b64);
@@ -66,19 +74,24 @@ export default function DetectionPanel({ settings, onViolationsUpdate }) {
         if (data.violations && data.violations.length > 0) {
           setCurrentViolations(data.violations);
           onViolationsUpdate(data.violations);
+          setStatusMessage('Violations detected. Displaying latest annotated frame.');
         }
         if (data.progress !== undefined) {
-          setProgress(data.progress * 100);
+          const pct = Math.round(data.progress * 100);
+          setProgress(pct);
+          setStatusMessage(`Processing video… ${pct}% complete`);
         }
       },
       () => {
         setProcessingVideo(false);
         setProgress(100);
+        setStatusMessage('Video processing complete.');
         streamRef.current = null;
       },
       (err) => {
         setError(err.message || 'Video processing failed');
         setProcessingVideo(false);
+        setStatusMessage('Video processing failed.');
         streamRef.current = null;
       }
     );
@@ -129,6 +142,12 @@ export default function DetectionPanel({ settings, onViolationsUpdate }) {
         <div className="loading-state">
           <div className="spinner"></div>
           <div className="loading-text">Analyzing frame...</div>
+        </div>
+      )}
+
+      {statusMessage && (
+        <div className="status-box">
+          <div className="status-text">{statusMessage}</div>
         </div>
       )}
 
