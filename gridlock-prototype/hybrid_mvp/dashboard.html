@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HawkEye — Traffic Violation Analytics</title>
+  <meta name="description" content="Real-time traffic violation detection dashboard powered by YOLOv8 and Moondream AI" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-dark:       #080c14;
+      --bg-card:       #0d1422;
+      --bg-card2:      #111827;
+      --border:        rgba(255,255,255,.07);
+      --accent-red:    #ef4444;
+      --accent-orange: #f97316;
+      --accent-purple: #a855f7;
+      --accent-blue:   #3b82f6;
+      --accent-green:  #22c55e;
+      --accent-pink:   #ec4899;
+      --accent-yellow: #eab308;
+      --text-primary:  #f1f5f9;
+      --text-muted:    #64748b;
+      --text-dim:      #334155;
+      --glow-red:      0 0 24px rgba(239,68,68,.35);
+      --glow-orange:   0 0 24px rgba(249,115,22,.35);
+      --glow-purple:   0 0 24px rgba(168,85,247,.35);
+      --glow-blue:     0 0 24px rgba(59,130,246,.35);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-dark); }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+    /* ── Animations ────────────────────────────────────────────────── */
+    @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+    @keyframes slide-in  { from { opacity:0; transform:translateY(-18px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes glow-ring { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+    @keyframes count-up  { from { transform:translateY(8px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+
+    /* ── Layout ────────────────────────────────────────────────────── */
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────── */
+    header {
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(59,130,246,.06) 0%, transparent 100%);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #3b82f6, #a855f7);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: var(--glow-blue);
+    }
+
+    .logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+    .logo-text p  { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .ws-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+    }
+
+    .ws-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: background .3s;
+    }
+
+    .ws-dot.connected  { background: var(--accent-green); animation: pulse-dot 2s infinite; }
+    .ws-dot.connecting { background: var(--accent-yellow); animation: pulse-dot 1s infinite; }
+    .ws-dot.error      { background: var(--accent-red); }
+
+    .live-badge {
+      background: rgba(239,68,68,.15);
+      border: 1px solid rgba(239,68,68,.3);
+      color: var(--accent-red);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    .live-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent-red);
+      border-radius: 50%;
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    /* ── Stats Banner ─────────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .stat-card:hover { transform: translateY(-2px); }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .stat-card.triple  { --color: var(--accent-red);    --glow: var(--glow-red);    }
+    .stat-card.triple::before  { background: var(--accent-red);    box-shadow: var(--glow-red);    }
+    .stat-card.helmet  { --color: var(--accent-orange);  --glow: var(--glow-orange); }
+    .stat-card.helmet::before  { background: var(--accent-orange);  box-shadow: var(--glow-orange); }
+    .stat-card.seatbelt{ --color: var(--accent-purple);  --glow: var(--glow-purple); }
+    .stat-card.seatbelt::before{ background: var(--accent-purple);  box-shadow: var(--glow-purple); }
+    .stat-card.wrongway{ --color: var(--accent-blue);    --glow: var(--glow-blue);   }
+    .stat-card.wrongway::before{ background: var(--accent-blue);    box-shadow: var(--glow-blue);   }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 7px;
+    }
+
+    .stat-icon {
+      width: 22px; height: 22px;
+      background: rgba(255,255,255,.06);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+
+    .stat-value {
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--color);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -1px;
+      line-height: 1;
+      transition: color .3s;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* ── Main Content ─────────────────────────────────────────────── */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      min-height: 0;
+    }
+
+    /* ── Violations Feed ──────────────────────────────────────────── */
+    .feed-panel {
+      padding: 24px 32px;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title span { color: var(--text-muted); font-weight: 400; font-size: 13px; }
+
+    .clear-btn {
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s, color .2s;
+    }
+    .clear-btn:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
+
+    /* ── Violation Card ───────────────────────────────────────────── */
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .v-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      animation: slide-in .35s cubic-bezier(.22,1,.36,1);
+      transition: box-shadow .2s;
+    }
+
+    .v-card:hover { box-shadow: 0 4px 32px rgba(0,0,0,.4); }
+
+    .v-card-img {
+      width: 130px;
+      height: 110px;
+      object-fit: cover;
+      display: block;
+      background: #1a2234;
+    }
+
+    .v-card-img.no-img {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 28px;
+    }
+
+    .v-card-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .v-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .v-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .v-badge.triple   { background:rgba(239,68,68,.15);  color:var(--accent-red);    border:1px solid rgba(239,68,68,.25); }
+    .v-badge.helmet   { background:rgba(249,115,22,.15); color:var(--accent-orange); border:1px solid rgba(249,115,22,.25); }
+    .v-badge.seatbelt { background:rgba(168,85,247,.15); color:var(--accent-purple); border:1px solid rgba(168,85,247,.25); }
+    .v-badge.wrongway { background:rgba(59,130,246,.15); color:var(--accent-blue);   border:1px solid rgba(59,130,246,.25); }
+    .v-badge.other    { background:rgba(100,116,139,.15);color:var(--text-muted);    border:1px solid rgba(100,116,139,.25); }
+
+    .v-card-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(255,255,255,.04);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    .v-card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .v-card-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────── */
+    .sidebar {
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .sidebar-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Mini bar chart ──────────────────────────────────────────── */
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .bar-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      width: 90px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .5s ease;
+    }
+
+    .bar-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-primary);
+      width: 24px;
+      text-align: right;
+    }
+
+    /* ── System Status ───────────────────────────────────────────── */
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .status-row:last-child { border-bottom: none; }
+    .status-key   { color: var(--text-muted); }
+    .status-val   { font-family: 'JetBrains Mono', monospace; color: var(--accent-green); font-size: 11px; }
+    .status-val.off { color: var(--accent-red); }
+
+    /* ── Empty state ─────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 14px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .main-content { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
+      header { padding: 14px 16px; }
+      .feed-panel { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Header ─────────────────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🦅</div>
+      <div class="logo-text">
+        <h1>HawkEye</h1>
+        <p>Traffic Violation Analytics · Real-time</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="ws-status">
+        <div class="ws-dot connecting" id="ws-dot"></div>
+        <span id="ws-label">Connecting…</span>
+      </div>
+      <div class="live-badge">LIVE</div>
+    </div>
+  </header>
+
+  <!-- ── Stats Grid ─────────────────────────────────────────────── -->
+  <div class="stats-grid">
+    <div class="stat-card triple">
+      <div class="stat-label">
+        <div class="stat-icon">🏍️</div>
+        Triple Riding
+      </div>
+      <div class="stat-value" id="cnt-TRIPLE_RIDING">0</div>
+      <div class="stat-sub">Motorcycle overloading</div>
+    </div>
+    <div class="stat-card helmet">
+      <div class="stat-label">
+        <div class="stat-icon">⛑️</div>
+        No Helmet
+      </div>
+      <div class="stat-value" id="cnt-HELMET_CHECK">0</div>
+      <div class="stat-sub">Helmet violations</div>
+    </div>
+    <div class="stat-card seatbelt">
+      <div class="stat-label">
+        <div class="stat-icon">🚗</div>
+        No Seatbelt
+      </div>
+      <div class="stat-value" id="cnt-SEATBELT_CHECK">0</div>
+      <div class="stat-sub">Driver seatbelt violations</div>
+    </div>
+    <div class="stat-card wrongway">
+      <div class="stat-label">
+        <div class="stat-icon">🔄</div>
+        Wrong Way
+      </div>
+      <div class="stat-value" id="cnt-WRONG_WAY">0</div>
+      <div class="stat-sub">Wrong-direction driving</div>
+    </div>
+  </div>
+
+  <!-- ── Main Content ───────────────────────────────────────────── -->
+  <div class="main-content">
+
+    <!-- Feed -->
+    <div class="feed-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          Live Violations Feed
+          <span id="feed-count">0 events</span>
+        </div>
+        <button class="clear-btn" onclick="clearFeed()">Clear</button>
+      </div>
+
+      <div class="cards-container" id="cards-container">
+        <div class="empty-state" id="empty-state">
+          <div class="icon">📡</div>
+          <p>Waiting for violation events…<br>Start <code>edge_client.py</code> to begin detection.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Breakdown bar chart -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Violation Breakdown</div>
+        <div id="bar-chart">
+          <div class="bar-row" data-type="TRIPLE_RIDING">
+            <span class="bar-label">Triple Riding</span>
+            <div class="bar-track"><div class="bar-fill" style="background:var(--accent-red);width:0%"></div></div>
+            <span class="bar-count" id="bar-cnt-TRIPLE_RIDING">0</span>
+          </div>
+          <div class="bar-row" data-type="HELMET_CHECK">
+            <span class="bar-label">No Helmet</span>
+            <div class="bar-track"><div class="bar-fill" style="background:var(--accent-orange);width:0%"></div></div>
+            <span class="bar-count" id="bar-cnt-HELMET_CHECK">0</span>
+          </div>
+          <div class="bar-row" data-type="SEATBELT_CHECK">
+            <span class="bar-label">No Seatbelt</span>
+            <div class="bar-track"><div class="bar-fill" style="background:var(--accent-purple);width:0%"></div></div>
+            <span class="bar-count" id="bar-cnt-SEATBELT_CHECK">0</span>
+          </div>
+          <div class="bar-row" data-type="WRONG_WAY">
+            <span class="bar-label">Wrong Way</span>
+            <div class="bar-track"><div class="bar-fill" style="background:var(--accent-blue);width:0%"></div></div>
+            <span class="bar-count" id="bar-cnt-WRONG_WAY">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- System status -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">System Status</div>
+        <div class="status-row">
+          <span class="status-key">Backend</span>
+          <span class="status-val" id="sys-backend">Checking…</span>
+        </div>
+        <div class="status-row">
+          <span class="status-key">WebSocket</span>
+          <span class="status-val" id="sys-ws">Disconnected</span>
+        </div>
+        <div class="status-row">
+          <span class="status-key">AI Model</span>
+          <span class="status-val">moondream:latest</span>
+        </div>
+        <div class="status-row">
+          <span class="status-key">Detector</span>
+          <span class="status-val">YOLOv8s + ByteTrack</span>
+        </div>
+        <div class="status-row">
+          <span class="status-key">Total Events</span>
+          <span class="status-val" id="sys-total">0</span>
+        </div>
+        <div class="status-row">
+          <span class="status-key">Session Start</span>
+          <span class="status-val" id="sys-start">—</span>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<script>
+  /* ── State ───────────────────────────────────────────────────────── */
+  const counts = {
+    TRIPLE_RIDING: 0,
+    HELMET_CHECK:  0,
+    SEATBELT_CHECK:0,
+    WRONG_WAY:     0,
+  };
+  let totalEvents  = 0;
+  let ws           = null;
+  let reconnectMs  = 2000;
+  const sessionStart = new Date();
+
+  document.getElementById('sys-start').textContent = sessionStart.toLocaleTimeString();
+
+  /* ── WebSocket ───────────────────────────────────────────────────── */
+  function connect() {
+    setWsStatus('connecting', 'Connecting…');
+
+    try {
+      ws = new WebSocket('ws://localhost:8000/ws');
+    } catch (err) {
+      console.error('[WS] Constructor failed:', err);
+      scheduleReconnect();
+      return;
+    }
+
+    ws.onopen = () => {
+      console.log('[WS] Connected');
+      setWsStatus('connected', 'Connected');
+      document.getElementById('sys-ws').textContent = 'Connected';
+      document.getElementById('sys-ws').classList.remove('off');
+      reconnectMs = 2000;
+      checkBackend();
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        if (msg.event === 'init_stats') {
+          applyInitStats(msg.stats);
+        } else if (msg.event === 'violation') {
+          handleViolation(msg);
+        }
+      } catch (err) {
+        console.error('[WS] Parse error:', err, evt.data);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('[WS] Error:', err);
+    };
+
+    ws.onclose = (evt) => {
+      console.warn(`[WS] Closed (code=${evt.code})`);
+      setWsStatus('error', 'Disconnected');
+      document.getElementById('sys-ws').textContent = 'Disconnected';
+      document.getElementById('sys-ws').classList.add('off');
+      scheduleReconnect();
+    };
+  }
+
+  function scheduleReconnect() {
+    setTimeout(() => {
+      console.log(`[WS] Reconnecting in ${reconnectMs}ms…`);
+      connect();
+      reconnectMs = Math.min(reconnectMs * 1.5, 15000);
+    }, reconnectMs);
+  }
+
+  function setWsStatus(state, label) {
+    const dot   = document.getElementById('ws-dot');
+    const lbl   = document.getElementById('ws-label');
+    dot.className = `ws-dot ${state}`;
+    lbl.textContent = label;
+  }
+
+  /* ── Backend health check ────────────────────────────────────────── */
+  async function checkBackend() {
+    try {
+      const res = await fetch('http://localhost:8000/health');
+      if (res.ok) {
+        document.getElementById('sys-backend').textContent = 'Online ✓';
+        document.getElementById('sys-backend').classList.remove('off');
+      } else {
+        throw new Error(`HTTP ${res.status}`);
+      }
+    } catch (err) {
+      document.getElementById('sys-backend').textContent = 'Offline';
+      document.getElementById('sys-backend').classList.add('off');
+    }
+  }
+
+  /* ── Init stats from server ──────────────────────────────────────── */
+  function applyInitStats(stats) {
+    Object.entries(stats).forEach(([type, cnt]) => {
+      if (type in counts) {
+        counts[type] = cnt;
+        animateCounter(`cnt-${type}`, cnt);
+        totalEvents += cnt;
+      }
+    });
+    updateBars();
+    document.getElementById('sys-total').textContent = totalEvents;
+  }
+
+  /* ── Handle incoming violation ───────────────────────────────────── */
+  function handleViolation(msg) {
+    const { violation_type, vehicle_id, image_url, timestamp } = msg;
+
+    // Increment counter
+    if (violation_type in counts) {
+      counts[violation_type]++;
+      animateCounter(`cnt-${violation_type}`, counts[violation_type]);
+    }
+    totalEvents++;
+    document.getElementById('sys-total').textContent = totalEvents;
+    document.getElementById('feed-count').textContent = `${totalEvents} event${totalEvents !== 1 ? 's' : ''}`;
+
+    // Update bars
+    updateBars();
+
+    // Remove empty state
+    const empty = document.getElementById('empty-state');
+    if (empty) empty.remove();
+
+    // Prepend violation card
+    const card = buildCard(violation_type, vehicle_id, image_url, timestamp);
+    const container = document.getElementById('cards-container');
+    container.insertBefore(card, container.firstChild);
+
+    // Trim to last 100 cards
+    while (container.children.length > 100) {
+      container.removeChild(container.lastChild);
+    }
+  }
+
+  /* ── Build violation card DOM ────────────────────────────────────── */
+  function buildCard(type, vehicleId, imageUrl, timestamp) {
+    const card = document.createElement('div');
+    card.className = 'v-card';
+
+    const typeMap = {
+      TRIPLE_RIDING:  { cls:'triple',   icon:'🏍️', label:'Triple Riding' },
+      HELMET_CHECK:   { cls:'helmet',   icon:'⛑️',  label:'No Helmet'    },
+      SEATBELT_CHECK: { cls:'seatbelt', icon:'🚗',  label:'No Seatbelt'  },
+      WRONG_WAY:      { cls:'wrongway', icon:'🔄',  label:'Wrong Way'    },
+    };
+    const meta = typeMap[type] || { cls:'other', icon:'⚠️', label: type };
+
+    const ts = timestamp
+      ? new Date(timestamp).toLocaleTimeString()
+      : new Date().toLocaleTimeString();
+
+    const imgSrc = imageUrl
+      ? `http://localhost:8000${imageUrl}`
+      : null;
+
+    card.innerHTML = `
+      ${imgSrc
+        ? `<img class="v-card-img" src="${imgSrc}" alt="${type}" loading="lazy" onerror="this.className='v-card-img no-img'; this.innerHTML='🚫';" />`
+        : `<div class="v-card-img no-img">📷</div>`
+      }
+      <div class="v-card-body">
+        <div>
+          <div class="v-card-top">
+            <span class="v-badge ${meta.cls}">${meta.icon} ${meta.label}</span>
+            <span class="v-card-id">ID #${vehicleId}</span>
+          </div>
+          <div class="v-card-meta">Vehicle tracked: <strong>#${vehicleId}</strong></div>
+        </div>
+        <div class="v-card-time">⏱ ${ts}</div>
+      </div>
+    `;
+    return card;
+  }
+
+  /* ── Animate counter ─────────────────────────────────────────────── */
+  function animateCounter(id, targetVal) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.animation = 'none';
+    el.offsetHeight; // reflow
+    el.style.animation = 'count-up 0.3s ease';
+    el.textContent = targetVal;
+  }
+
+  /* ── Update bar chart ────────────────────────────────────────────── */
+  function updateBars() {
+    const maxVal = Math.max(...Object.values(counts), 1);
+    Object.entries(counts).forEach(([type, cnt]) => {
+      const pct = Math.round((cnt / maxVal) * 100);
+      const row  = document.querySelector(`.bar-row[data-type="${type}"]`);
+      if (row) {
+        row.querySelector('.bar-fill').style.width = pct + '%';
+        const cntEl = document.getElementById(`bar-cnt-${type}`);
+        if (cntEl) cntEl.textContent = cnt;
+      }
+    });
+  }
+
+  /* ── Clear feed ──────────────────────────────────────────────────── */
+  function clearFeed() {
+    const container = document.getElementById('cards-container');
+    container.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.id = 'empty-state';
+    empty.innerHTML = '<div class="icon">📡</div><p>Feed cleared. Waiting for new events…</p>';
+    container.appendChild(empty);
+    document.getElementById('feed-count').textContent = '0 events';
+  }
+
+  /* ── Load existing violations from API on page load ─────────────── */
+  async function loadExistingViolations() {
+    try {
+      const res = await fetch('http://localhost:8000/api/violations?limit=30');
+      if (!res.ok) return;
+      const data = await res.json();
+      data.violations.reverse().forEach(v => {
+        handleViolation({
+          violation_type: v.violation_type,
+          vehicle_id:     v.vehicle_id,
+          image_url:      v.image_url,
+          timestamp:      v.timestamp,
+        });
+      });
+    } catch (err) {
+      console.warn('[LOAD] Could not load existing violations:', err.message);
+    }
+  }
+
+  /* ── Init ─────────────────────────────────────────────────────────── */
+  connect();
+  checkBackend();
+  setTimeout(loadExistingViolations, 800);
+
+  // Periodic backend health check
+  setInterval(checkBackend, 30000);
+</script>
+</body>
+</html>

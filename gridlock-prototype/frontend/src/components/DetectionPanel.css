@@ -136,6 +136,19 @@
   color: var(--text-secondary);
 }
 
+.status-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.status-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
 .progress-info {
   display: flex;
   justify-content: space-between;

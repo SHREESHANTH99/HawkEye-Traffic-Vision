@@ -92,3 +92,12 @@ kaggle.json
 .coverage
 htmlcov/
 .tox/
+
+# ─── Hybrid MVP Outputs & Cache ───────────────────────────────────────────────
+*.db
+gridlock-prototype/hybrid_mvp/violations_local/
+gridlock-prototype/hybrid_mvp/violations_review/
+gridlock-prototype/hybrid_mvp/static/
+gridlock-prototype/hybrid_mvp/models/
+gridlock-prototype/hybrid_mvp/*.jpg
+

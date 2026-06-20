@@ -389,8 +389,15 @@ async def ws_detect_video(websocket: WebSocket):
     """
     await websocket.accept()
     tmp_path = None
+    det = None
 
     try:
+        params = websocket.query_params
+        conf_threshold = float(params.get("conf_threshold", 0.45))
+        overlap_threshold = float(params.get("overlap_threshold", 0.30))
+        triple_threshold = int(params.get("triple_threshold", 3))
+        frame_skip = int(params.get("frame_skip", 3))
+
         # Receive video bytes
         video_bytes = await websocket.receive_bytes()
 
@@ -400,7 +407,9 @@ async def ws_detect_video(websocket: WebSocket):
             tmp_path = tmp.name
 
         det = get_detector()
-        checker = get_checker()
+        old_conf = det.conf
+        det.conf = conf_threshold
+        checker = get_checker(overlap=overlap_threshold, triple=triple_threshold)
 
         # Count total frames for progress
         cap = cv2.VideoCapture(tmp_path)
@@ -412,7 +421,6 @@ async def ws_detect_video(websocket: WebSocket):
         except Exception:
             alpr = None
 
-        frame_skip = 3
         for fid, frame, detections, ts in det.stream_video(tmp_path):
             if fid % frame_skip != 0:
                 continue
@@ -454,6 +462,8 @@ async def ws_detect_video(websocket: WebSocket):
         except Exception:
             pass
     finally:
+        if det is not None:
+            det.conf = old_conf
         if tmp_path and Path(tmp_path).exists():
             Path(tmp_path).unlink(missing_ok=True)
 
