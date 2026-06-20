@@ -6,44 +6,62 @@
 
 ## 🚀 Quick Start
 
+Gridlock features a decoupled architecture with a FastAPI backend for heavy AI inference and a modern React (Vite) frontend for a responsive, multi-page Dashboard.
+
+### 1. Start the Backend (FastAPI + YOLO)
+
 ```powershell
-# 1. Create and activate virtual environment
+# Create and activate virtual environment
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. (Optional) Download IDD dataset
-python src/download_idd.py
-
-# 4. Train YOLOv8 (after dataset is ready)
-python src/train.py
-
-# 5. Launch Streamlit dashboard
-streamlit run src/app.py
+# Run the backend on port 8000
+uvicorn api.main:app --reload --port 8000
 ```
+
+### 2. Start the Frontend (React + Vite)
+
+```powershell
+# Open a new terminal
+cd frontend
+
+# Install UI dependencies
+npm install
+
+# Start the dev server
+npm run dev
+```
+
+Navigate to `http://localhost:5173` to view the Dashboard!
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 gridlock-prototype/
+├── api/                       ← FastAPI backend routes and models
+│   └── main.py
+├── frontend/                  ← React web application
+│   ├── src/
+│   │   ├── components/        ← React UI components
+│   │   ├── contexts/          ← Global state (SettingsContext)
+│   │   ├── pages/             ← Route pages (Dashboard, Detect, Settings)
+│   │   └── api/               ← Client requests to FastAPI
 ├── data/
 │   ├── images/{train,val}/    ← training images
-│   ├── labels/{train,val}/    ← YOLO format labels
-│   └── raw/                   ← downloaded datasets
+│   └── labels/{train,val}/    ← YOLO format labels
 ├── models/
 │   └── weights/               ← best.pt after training
 ├── src/
-│   ├── app.py                 ← Streamlit UI
 │   ├── detect.py              ← YOLOv8 inference wrapper
 │   ├── violations.py          ← rule-based violation logic
 │   ├── alpr.py                ← PaddleOCR plate reading
 │   ├── utils.py               ← helpers (drawing, logging)
-│   ├── train.py               ← training script
-│   └── download_idd.py        ← dataset download
+│   └── train.py               ← training script
 ├── outputs/
 │   ├── logs/                  ← violation CSVs
 │   └── frames/                ← saved annotated frames
@@ -79,7 +97,7 @@ gridlock-prototype/
 
 ## 📊 CSV Output Format
 
-```
+```csv
 violation_id, plate_number, violation_type, confidence, timestamp, frame_id, image_path
 V001, KA03MN5678, NO_HELMET, 0.87, 2026-06-20 11:32:01, 142, outputs/frames/frame_142.jpg
 ```
@@ -102,9 +120,19 @@ Target metrics: **mAP50 ≥ 0.50** after 50 epochs on validation set.
 
 ## 🔧 Dataset Sources
 
-1. **IDD** — [Kaggle: sovitrath/indian-driving-dataset](https://www.kaggle.com/datasets/sovitrath/indian-driving-dataset-segmentation-part-2) (via `src/download_idd.py`)
-2. **Indian License Plates** — [Roboflow Universe](https://universe.roboflow.com) → search "Indian License Plate" → Export YOLOv8
-3. **Custom Helmet/Triple-Riding** — Extract frames from dashcam video, annotate on [Roboflow](https://app.roboflow.com), export YOLOv8
+Datasets can now be fetched directly via API POST requests instead of manual downloads:
+
+1. **Roboflow (Indian Plates)**
+```bash
+curl -X POST http://localhost:8000/dataset/fetch/roboflow \
+    -H 'Content-Type: application/json' \
+    -d '{"api_key": "YOUR_KEY", "workspace": "your-workspace", "project": "indian-number-plates", "version": 1, "format": "yolov8"}'
+```
+
+2. **Kaggle (IDD Subset)**
+```bash
+curl -X POST http://localhost:8000/dataset/fetch/kaggle?dataset_slug=owner/dataset-name
+```
 
 ---
 
@@ -112,5 +140,6 @@ Target metrics: **mAP50 ≥ 0.50** after 50 epochs on validation set.
 
 - **Detection**: [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics)
 - **OCR**: [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
-- **UI**: [Streamlit](https://streamlit.io)
+- **API Backend**: [FastAPI](https://fastapi.tiangolo.com)
+- **UI Frontend**: [React (Vite)](https://vitejs.dev)
 - **CV**: [OpenCV](https://opencv.org)

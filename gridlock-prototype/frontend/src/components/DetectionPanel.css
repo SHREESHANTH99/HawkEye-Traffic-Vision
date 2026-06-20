@@ -1,0 +1,224 @@
+.detection-panel {
+  flex: 3;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-header {
+  margin-bottom: 24px;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+.upload-area {
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-base);
+  padding: 60px 20px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.upload-area:hover {
+  border-color: var(--text-tertiary);
+  background: var(--bg-card);
+}
+
+.file-input-label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.file-input-label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.upload-icon {
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.upload-area:hover .upload-icon {
+  color: var(--text-secondary);
+}
+
+.upload-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.upload-subtext {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.file-ready {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.file-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.btn-primary {
+  background: var(--text-primary);
+  color: var(--bg-base);
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 12px;
+  width: 100%;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.loading-state, .progress-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--text-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.progress-label {
+  color: var(--text-secondary);
+}
+
+.progress-pct {
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 300px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--text-primary);
+  transition: width 0.2s ease;
+}
+
+.error-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--semantic-error-bg);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  color: var(--semantic-error);
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.error-icon {
+  display: flex;
+}
+
+.error-text {
+  font-size: 13px;
+}
+
+.result-container {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+}
+
+.result-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.reset-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.reset-btn:hover {
+  background: rgba(0,0,0,0.8);
+}

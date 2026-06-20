@@ -163,3 +163,9 @@ def load_violations_log():
         "violation_id", "plate_number", "violation_type",
         "confidence", "timestamp", "frame_id", "image_path"
     ])
+
+def clear_violations_log():
+    """Delete today's violation log."""
+    log_path = get_log_path()
+    if log_path.exists():
+        log_path.unlink()
