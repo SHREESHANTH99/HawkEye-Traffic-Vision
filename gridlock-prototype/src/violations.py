@@ -9,6 +9,13 @@ violations.py — Rule-based traffic violation checker for Gridlock
 """
 
 from __future__ import annotations
+import sys
+import os
+# Ensure project root is on path so this file can be run as a script
+# (python src/violations.py) as well as imported as a module.
+if __package__ is None or __package__ == "":
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import cv2
 import numpy as np
 from dataclasses import dataclass, field
@@ -210,9 +217,12 @@ if __name__ == "__main__":
     dets = [
         Detection("motorcycle", 0.91, [100, 200, 300, 400], track_id=1),
         Detection("person",     0.88, [120, 180, 280, 390], track_id=2),
-        # No helmet detection → should trigger NO_HELMET
+        # No helmet detection -> should trigger NO_HELMET
     ]
     checker = ViolationChecker()
     violations = checker.check(dets, frame_id=0, timestamp="2026-06-20 12:00:00")
-    for v in violations:
-        print(f"[VIOLATION] {v.violation_type}  vehicle_id={v.vehicle_id}  conf={v.confidence}")
+    if violations:
+        for v in violations:
+            print(f"[VIOLATION] {v.violation_type}  vehicle_id={v.vehicle_id}  conf={v.confidence}")
+    else:
+        print("[OK] No violations -- check overlap_threshold or detection classes.")

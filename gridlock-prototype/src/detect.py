@@ -162,7 +162,10 @@ class GridlockDetector:
 # ─── Quick test ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    import sys
+    import sys, os
+    # Ensure project root is on path so `src.*` imports resolve
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
     path = sys.argv[1] if len(sys.argv) > 1 else "yolov8n.pt"
     detector = GridlockDetector(path)
     print("Detector loaded. Pass an image path as argument to test.")

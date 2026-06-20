@@ -118,13 +118,22 @@ def get_overlapping(boxes_a, ref_box, threshold=0.3):
 
 # ─── CSV Logging ─────────────────────────────────────────────────────────────
 
+# LOG_DIR is resolved relative to project root at call time, not import time.
+# This avoids creating directories in the wrong CWD when imported from tests
+# or when Streamlit is launched from a different working directory.
 LOG_DIR = Path("outputs/logs")
-LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def get_log_path():
+def _ensure_log_dir() -> Path:
+    """Resolve and create log directory on first use, not at import time."""
+    log_dir = Path("outputs/logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir
+
+
+def get_log_path() -> Path:
     today = datetime.now().strftime("%Y%m%d")
-    return LOG_DIR / f"violations_{today}.csv"
+    return _ensure_log_dir() / f"violations_{today}.csv"
 
 
 def save_violation_to_csv(violation, plate_text="UNKNOWN"):

@@ -10,3 +10,7 @@ tqdm>=4.66.0
 kagglehub>=0.2.0
 torch>=2.0.0
 torchvision>=0.15.0
+
+# ALPR — Automatic License Plate Recognition
+paddleocr>=2.7.0
+paddlepaddle>=2.5.0

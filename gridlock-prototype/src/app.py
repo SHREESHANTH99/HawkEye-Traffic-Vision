@@ -237,6 +237,16 @@ with st.sidebar:
     model_choice = st.selectbox("Detection Model", list(model_options.keys()))
     model_path = model_options[model_choice]
 
+    # Guard: warn if custom model weights don't exist yet
+    if model_choice == "Custom Gridlock Model" and not Path(model_path).exists():
+        st.warning(
+            "Custom weights not found. Train first:\n"
+            "`python src/train.py`\n\n"
+            "Falling back to YOLOv8 Nano.",
+            icon="⚠️",
+        )
+        model_path = "yolov8n.pt"
+
     conf_threshold = st.slider(
         "Confidence Threshold", min_value=0.10, max_value=0.90,
         value=0.45, step=0.05,
@@ -254,6 +264,26 @@ with st.sidebar:
     check_triple  = st.checkbox("Triple Riding Detection", value=True)
     check_signal  = st.checkbox("Signal Jump Detection", value=False)
     triple_count  = st.number_input("Triple Riding Threshold (riders)", min_value=2, max_value=5, value=3)
+
+    # Signal ROI inputs — shown only when Signal Jump is enabled
+    signal_roi = None
+    if check_signal:
+        st.markdown(
+            "<div style='font-size:11px;color:#747d8c;margin-top:4px;'>" 
+            "Enter stop-line region in pixel coords (x1, y1, x2, y2):</div>",
+            unsafe_allow_html=True,
+        )
+        roi_col1, roi_col2 = st.columns(2)
+        with roi_col1:
+            roi_x1 = st.number_input("x1", min_value=0, value=0,   step=10, label_visibility="visible")
+            roi_y1 = st.number_input("y1", min_value=0, value=300,  step=10, label_visibility="visible")
+        with roi_col2:
+            roi_x2 = st.number_input("x2", min_value=0, value=640,  step=10, label_visibility="visible")
+            roi_y2 = st.number_input("y2", min_value=0, value=400,  step=10, label_visibility="visible")
+        if roi_x2 > roi_x1 and roi_y2 > roi_y1:
+            signal_roi = [int(roi_x1), int(roi_y1), int(roi_x2), int(roi_y2)]
+        else:
+            st.caption("x2 must be > x1 and y2 must be > y1")
 
     st.markdown('<div class="section-header">📸 Input Mode</div>', unsafe_allow_html=True)
     input_mode = st.radio(
@@ -308,9 +338,10 @@ with left_col:
         checker = ViolationChecker(
             overlap_threshold=overlap_thresh,
             triple_riding_threshold=triple_count,
+            signal_roi=signal_roi,   # None when disabled, [x1,y1,x2,y2] when set
         )
     except Exception as e:
-        st.error(f"❌ Failed to load model: {e}")
+        st.error(f"Failed to load model: {e}")
         st.stop()
 
     # ── Image mode ────────────────────────────────────────────────────────────

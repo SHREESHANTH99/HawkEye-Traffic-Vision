@@ -15,6 +15,12 @@ alpr.py — Automatic License Plate Recognition for Gridlock
 """
 
 from __future__ import annotations
+import sys
+import os
+# Allow running as a standalone script: python src/alpr.py image.jpg
+if __package__ is None or __package__ == "":
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import re
 import cv2
 import numpy as np
@@ -191,27 +197,48 @@ class ALPRPipeline:
         Clean OCR output to extract a valid Indian plate number.
         Steps:
           1. Remove non-alphanumeric chars
-          2. Fix common OCR errors (0↔O, 1↔I, 8↔B)
+          2. Apply position-aware OCR error correction:
+               - Letter positions (0-1, 4-5): digits corrected to look-alike letters
+               - Digit positions (2-3, 6-9): letters corrected to look-alike digits
           3. Regex match against Indian plate pattern
         """
-        # Remove noise characters
-        cleaned = re.sub(r"[^A-Z0-9\s]", "", raw.upper())
+        # Step 1: Remove noise characters, uppercase
+        cleaned = re.sub(r"[^A-Z0-9]", "", raw.upper())
 
-        # Common OCR substitution fixes
-        fixes = {"0": "O", "1": "I", "8": "B"}  # applied to letter positions only
-        # (More robust: apply only to alphabetic positions — kept simple for prototype)
+        # Step 2: Position-aware OCR correction
+        # Indian plate structure: LL DD L{1,2} D{4}
+        # Positions: 0,1 = letters | 2,3 = digits | 4,5(,6) = letters | rest = digits
+        DIGIT_TO_LETTER = {"0": "O", "1": "I", "8": "B", "5": "S", "6": "G"}
+        LETTER_TO_DIGIT = {"O": "0", "I": "1", "B": "8", "S": "5", "G": "6", "Z": "2"}
 
-        # Try to match Indian plate pattern
-        match = PLATE_PATTERN.search(cleaned.replace(" ", ""))
+        corrected = list(cleaned)
+        for i, ch in enumerate(corrected):
+            if i < 2:
+                # Must be letters (state code) — fix digits to letters
+                if ch in DIGIT_TO_LETTER:
+                    corrected[i] = DIGIT_TO_LETTER[ch]
+            elif i < 4:
+                # Must be digits (district code) — fix letters to digits
+                if ch in LETTER_TO_DIGIT:
+                    corrected[i] = LETTER_TO_DIGIT[ch]
+            elif i >= len(cleaned) - 4:
+                # Last 4 must be digits (serial number) — fix letters to digits
+                if ch in LETTER_TO_DIGIT:
+                    corrected[i] = LETTER_TO_DIGIT[ch]
+            # Middle positions (series letters) — leave as-is
+
+        cleaned = "".join(corrected)
+
+        # Step 3: Regex match
+        match = PLATE_PATTERN.search(cleaned)
         if match:
-            plate = match.group(0).replace(" ", "").upper()
-            # Validate state code
+            plate = match.group(0).upper()
             if plate[:2] in STATE_CODES:
                 return plate
-            return plate  # return anyway, state might be valid but missing from list
+            return plate  # return anyway; state may be valid but not in our list
 
-        # No match: return best-effort cleaned text
-        return cleaned.replace(" ", "") or "UNREADABLE"
+        # No match: return best-effort corrected text
+        return cleaned or "UNREADABLE"
 
     # ── Public API ────────────────────────────────────────────────────────────
 
