@@ -1,0 +1,95 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.pyo
+.Python
+
+# ─── Virtual Environments ─────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+.env
+
+# ─── Distribution / Packaging ─────────────────────────────────────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+# ─── ML Models & Weights ──────────────────────────────────────────────────────
+# Ignore downloaded/trained weights (large binary files)
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.engine
+*.torchscript
+
+# Keep the weights folder structure but not the files
+models/weights/*
+!models/weights/.gitkeep
+
+# Ultralytics run outputs
+runs/
+models/gridlock_v*/
+
+# ─── Dataset & Raw Data ───────────────────────────────────────────────────────
+# Raw downloaded datasets can be very large
+data/raw/
+data/images/
+data/labels/
+
+# Keep folder structure placeholders
+!data/raw/.gitkeep
+!data/images/train/.gitkeep
+!data/images/val/.gitkeep
+!data/labels/train/.gitkeep
+!data/labels/val/.gitkeep
+
+# ─── Outputs ──────────────────────────────────────────────────────────────────
+outputs/frames/
+outputs/logs/
+!outputs/frames/.gitkeep
+!outputs/logs/.gitkeep
+
+# ─── Streamlit ────────────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ─── Jupyter Notebooks ────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Testing & Coverage ───────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ─── IDE / Editor ─────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Kaggle ───────────────────────────────────────────────────────────────────
+# Never commit API credentials
+kaggle.json
+.kaggle/
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/

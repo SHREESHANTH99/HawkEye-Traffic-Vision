@@ -1,0 +1,94 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.pyo
+.Python
+
+# ─── Virtual Environments ─────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+.env
+
+# ─── Distribution / Packaging ─────────────────────────────────────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+site-packages/
+
+# ─── ML Model Weights (large binary files — download separately) ──────────────
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.engine
+*.torchscript
+*.pkl
+
+# Keep folder structure but not the weights
+gridlock-prototype/models/weights/*
+!gridlock-prototype/models/weights/.gitkeep
+
+# Ultralytics training run outputs
+runs/
+gridlock-prototype/models/gridlock_v*/
+
+# ─── Dataset & Raw Data (too large for git) ───────────────────────────────────
+gridlock-prototype/data/raw/*
+!gridlock-prototype/data/raw/.gitkeep
+gridlock-prototype/data/images/*
+!gridlock-prototype/data/images/train/.gitkeep
+!gridlock-prototype/data/images/val/.gitkeep
+gridlock-prototype/data/labels/*
+!gridlock-prototype/data/labels/train/.gitkeep
+!gridlock-prototype/data/labels/val/.gitkeep
+
+# ─── App Outputs ──────────────────────────────────────────────────────────────
+gridlock-prototype/outputs/frames/*
+!gridlock-prototype/outputs/frames/.gitkeep
+gridlock-prototype/outputs/logs/*
+!gridlock-prototype/outputs/logs/.gitkeep
+
+# ─── IDE / Editor ─────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ─── OS Files ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# ─── Kaggle / API Credentials ─────────────────────────────────────────────────
+kaggle.json
+.kaggle/
+*.env
+.env.*
+
+# ─── Streamlit Secrets ────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+
+# ─── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
