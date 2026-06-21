@@ -1,4 +1,4 @@
-# Gridlock — Traffic Violation Detection Prototype
+# HawkEye-Traffic-Vision — Traffic Violation Detection Prototype
 
 > AI-powered detection of traffic violations in Indian road conditions using YOLOv8 + PaddleOCR + Ollama LLM Judge.
 

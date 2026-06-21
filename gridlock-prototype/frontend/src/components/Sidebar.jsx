@@ -56,9 +56,9 @@ export default function Sidebar() {
         <div className="brand-badge">
           <div className="logo-container">
             <div className="logo-pulse"></div>
-            <div className="logo-text">GRIDLOCK</div>
+            <div className="logo-text">HAWKEYE</div>
           </div>
-          <div className="logo-subtext">VIOLATION DETECTION</div>
+          <div className="logo-subtext">TRAFFIC VISION</div>
         </div>
       </div>
 
