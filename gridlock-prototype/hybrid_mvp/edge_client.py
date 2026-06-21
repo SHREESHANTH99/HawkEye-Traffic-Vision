@@ -124,10 +124,10 @@ CLS_LABEL = {
 
 # ── Detection tuning ─────────────────────────────────────────────────────
 CONF_THRESHOLD  = 0.30
-RESIZE_WIDTH    = 1280
+RESIZE_WIDTH    = 640       # reduced from 1280 for faster processing
 HEAD_PAD_RATIO  = 0.35      # extra upward padding for helmet crop (35%)
 MIN_VEH_PX      = 40        # minimum width OR height of vehicle box
-PROCESS_EVERY_N = 3         # run YOLO every 3rd frame
+PROCESS_EVERY_N = 1         # process every frame for real-time scanning
 MEMORY_FRAMES   = 15        # frames to keep drawing a lost vehicle from memory
 
 COLORS = {
@@ -598,7 +598,7 @@ def main() -> None:
             results = model.track(
                 frame, persist=True, tracker="bytetrack.yaml",
                 conf=CONF_THRESHOLD, classes=ALL_CLASSES,
-                device=device_arg, verbose=False, imgsz=640, iou=0.45,
+                device=device_arg, verbose=False, imgsz=416, iou=0.45,
             )
         except Exception as exc:
             print(f"[YOLO ERR] {exc}")
