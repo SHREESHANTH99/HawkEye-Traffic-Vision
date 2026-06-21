@@ -101,3 +101,9 @@ gridlock-prototype/hybrid_mvp/static/
 gridlock-prototype/hybrid_mvp/models/
 gridlock-prototype/hybrid_mvp/*.jpg
 
+# ─── Prototype / API Outputs & Cache ──────────────────────────────────────────
+gridlock-prototype/violations_local/
+gridlock-prototype/violations_review/
+gridlock-prototype/static/
+
+

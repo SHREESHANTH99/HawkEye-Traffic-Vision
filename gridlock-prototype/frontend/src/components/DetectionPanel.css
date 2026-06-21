@@ -10,7 +10,10 @@
 }
 
 .panel-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .panel-title {
@@ -19,6 +22,81 @@
   color: var(--text-primary);
   letter-spacing: 0.5px;
 }
+
+/* ── Live scan badge ─────────────────────────────────────────────────────── */
+.live-scan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 200, 80, 0.07);
+  border: 1px solid rgba(0, 200, 80, 0.25);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #00c850;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00c850;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+.live-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.live-stat {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.live-stat strong {
+  color: var(--text-primary);
+}
+
+.violations-stat strong {
+  color: #ff4a4a;
+}
+
+/* ── Stop button ─────────────────────────────────────────────────────────── */
+.btn-stop {
+  background: rgba(255, 60, 60, 0.15);
+  color: #ff4a4a;
+  border: 1px solid rgba(255, 60, 60, 0.35);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-stop:hover {
+  background: rgba(255, 60, 60, 0.25);
+}
+
+
 
 .upload-area {
   border: 1px dashed var(--border-strong);
