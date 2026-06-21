@@ -82,7 +82,12 @@ export default function ViolationLog({ violations, onClear }) {
                       {v.violation_type.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="mono plate-cell">{v.plate_text}</td>
+                  <td className={`mono plate-cell ${v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'plate-invalid' : ''}`} title={v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'Partial/Uncertain Read' : ''}>
+                    {v.plate_text}
+                    {v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid && (
+                      <span style={{color: '#ff4757', marginLeft: '4px'}}>*</span>
+                    )}
+                  </td>
                   <td className="mono text-muted">{v.confidence.toFixed(2)}</td>
                   <td className="mono text-muted">{v.frame_id}</td>
                   <td className="mono time-col align-right">{v.timestamp.split(' ')[1]}</td>

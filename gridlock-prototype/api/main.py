@@ -447,6 +447,9 @@ class ViolationOut(BaseModel):
     timestamp: str
     plate_text: str
     rider_count: int
+    detection_tier: Optional[str] = None
+    ocr_confidence_raw: Optional[float] = None
+    plate_valid: bool = False
 
 
 class DetectImageResponse(BaseModel):
@@ -463,6 +466,9 @@ class ALPRResponse(BaseModel):
     raw_text: str
     plate_number: str
     confidence: float
+    detection_tier: Optional[str] = None
+    ocr_confidence_raw: Optional[float] = None
+    plate_valid: bool = False
 
 
 class ViolationRecord(BaseModel):
@@ -472,6 +478,7 @@ class ViolationRecord(BaseModel):
     confidence: float = 0.0
     timestamp: str = ""
     frame_id: Any = 0
+    plate_valid: bool = False
     image_path: str = ""
 
 
@@ -535,22 +542,28 @@ def _violation_to_dict(v) -> dict:
         "confidence": round(float(v.confidence), 4),
         "frame_id": int(v.frame_id),
         "timestamp": v.timestamp,
-        "plate_text": v.plate_text,
+        "plate_text": getattr(v, "plate_text", "UNKNOWN"),
         "rider_count": int(v.rider_count),
+        "detection_tier": getattr(v, "detection_tier", None),
+        "ocr_confidence_raw": getattr(v, "ocr_confidence_raw", None),
+        "plate_valid": getattr(v, "plate_valid", False),
     }
 
 
-def _run_alpr_on_violation(frame: np.ndarray, violation, alpr) -> str:
-    """Detect plate within a vehicle bbox and return plate text."""
+def _run_alpr_on_violation(frame: np.ndarray, violation, alpr):
+    """Detect plate within a vehicle bbox and return PlateResult or None."""
     try:
-        plate_bboxes = alpr.detect_plates_in_vehicle(frame, violation.bbox)
+        # Support both object and dict formats for bbox
+        bbox = getattr(violation, "bbox", None) or violation.get("bbox")
+        plate_bboxes, tier = alpr.detect_plates_in_vehicle(frame, bbox)
         if plate_bboxes:
             result = alpr.read_plate_from_frame(frame, plate_bboxes[0])
             if result:
-                return result.plate_number
+                result.detection_tier = tier
+                return result
     except Exception:
         pass
-    return "UNKNOWN"
+    return None
 
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
@@ -597,7 +610,17 @@ async def detect_image(
         try:
             alpr = get_alpr()
             for v in violations:
-                v.plate_text = _run_alpr_on_violation(frame, v, alpr)
+                alpr_res = _run_alpr_on_violation(frame, v, alpr)
+                if alpr_res:
+                    v.plate_text = alpr_res.plate_number
+                    v.detection_tier = alpr_res.detection_tier
+                    v.ocr_confidence_raw = alpr_res.ocr_confidence_raw
+                    v.plate_valid = alpr_res.plate_valid
+                else:
+                    v.plate_text = "UNKNOWN"
+                    v.detection_tier = None
+                    v.ocr_confidence_raw = None
+                    v.plate_valid = False
         except HTTPException:
             pass  # ALPR not installed — leave plate_text as UNKNOWN
 
@@ -647,11 +670,14 @@ async def alpr_read(
     if result is None:
         raise HTTPException(status_code=400, detail="Could not read plate from image.")
 
-    return {
-        "raw_text": result.raw_text,
-        "plate_number": result.plate_number,
-        "confidence": round(float(result.confidence), 4),
-    }
+    return ALPRResponse(
+        raw_text=result.raw_text,
+        plate_number=result.plate_number,
+        confidence=result.confidence,
+        detection_tier=result.detection_tier,
+        ocr_confidence_raw=result.ocr_confidence_raw,
+        plate_valid=result.plate_valid,
+    )
 
 
 # GET /violations/log
@@ -740,6 +766,11 @@ async def ws_detect_video(websocket: WebSocket):
         model = _get_coco_model()
         _get_helmet_model()   # pre-warm so first frame isn't slow
 
+        try:
+            alpr = get_alpr()
+        except Exception:
+            alpr = None
+
         cap          = cv2.VideoCapture(tmp_path)
         total_frames = max(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), 1)
         cap.release()
@@ -785,6 +816,25 @@ async def ws_detect_video(websocket: WebSocket):
                             v["vehicle_id"], v["violation_type"],
                             crop_bytes, frame_id
                         )
+
+                    # ALPR and CSV Logging
+                    alpr_res = _run_alpr_on_violation(frame, v, alpr)
+                    if alpr_res:
+                        v["plate_text"] = alpr_res.plate_number
+                        v["detection_tier"] = alpr_res.detection_tier
+                        v["ocr_confidence_raw"] = alpr_res.ocr_confidence_raw
+                        v["plate_valid"] = alpr_res.plate_valid
+                    else:
+                        v["plate_text"] = "UNKNOWN"
+                        v["detection_tier"] = None
+                        v["ocr_confidence_raw"] = None
+                        v["plate_valid"] = False
+
+                    try:
+                        from src.utils import save_violation_to_csv
+                        save_violation_to_csv(v, v["plate_text"])
+                    except Exception:
+                        pass
 
                 progress = round(min(frame_id / total_frames, 1.0), 4)
                 payload  = {

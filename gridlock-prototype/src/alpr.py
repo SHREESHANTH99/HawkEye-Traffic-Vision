@@ -33,8 +33,8 @@ _ocr = None
 def _get_ocr():
     global _ocr
     if _ocr is None:
-        from paddleocr import PaddleOCR
-        _ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
+        import easyocr
+        _ocr = easyocr.Reader(['en'], gpu=False)
     return _ocr
 
 
@@ -42,7 +42,7 @@ def _get_ocr():
 
 # Covers: KA03MN5678 / MH12AB1234 / DL8CAB0001 / TN22V5678
 PLATE_PATTERN = re.compile(
-    r"[A-Z]{2}\s*[0-9]{1,2}\s*[A-Z]{1,3}\s*[0-9]{1,4}", re.IGNORECASE
+    r"[A-Z]{2}\s*[0-9]{1,2}\s*[A-Z]{1,3}\s*[0-9]{4}$", re.IGNORECASE
 )
 
 STATE_CODES = {
@@ -61,6 +61,9 @@ class PlateResult:
     confidence: float      # OCR confidence
     bbox: list             # plate bbox in original frame [x1,y1,x2,y2]
     crop: Optional[np.ndarray] = None  # cropped plate image
+    detection_tier: str = ""
+    ocr_confidence_raw: float = 0.0
+    plate_valid: bool = False  # True if plate passed regex validation
 
 
 # ─── ALPR Pipeline ────────────────────────────────────────────────────────────
@@ -92,23 +95,49 @@ class ALPRPipeline:
 
     # ── Plate detection ───────────────────────────────────────────────────────
 
-    def detect_plates(self, frame: np.ndarray, conf: float = 0.4) -> list:
+    def detect_plates(self, frame: np.ndarray, conf: float = 0.4) -> Tuple[list, str]:
         """
         Detect license plate bounding boxes in frame using YOLO.
-        Returns list of [x1,y1,x2,y2] bboxes.
-        Falls back to a simple Haar cascade if no YOLO model available.
+        Returns Tuple[list of [x1,y1,x2,y2] bboxes, detection_tier].
+        Falls back to a simple contour heuristic if no YOLO model available.
         """
         if self.plate_model:
             results = self.plate_model.predict(frame, conf=conf, verbose=False)
             if results and results[0].boxes is not None:
-                return results[0].boxes.xyxy.tolist()
-            return []
+                return results[0].boxes.xyxy.tolist(), "trained_model"
+            return [], "trained_model"
         else:
             # Fallback: heuristic crop of lower-centre of vehicle bbox
-            # (used when no separate plate model is available)
-            return []
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            filtered = cv2.bilateralFilter(gray, 11, 17, 17)
+            edged = cv2.Canny(filtered, 30, 200)
+            contours, _ = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            
+            candidates = []
+            frame_area = frame.shape[0] * frame.shape[1]
+            if frame_area == 0:
+                return [], "heuristic"
+                
+            for c in contours:
+                x, y, w, h = cv2.boundingRect(c)
+                if h < 15: continue
+                area = w * h
+                if area > 0.8 * frame_area: continue
+                ar = w / float(h)
+                
+                # Accept single row (2.5-6.0) or double row (1.5-3.0)
+                if 1.5 <= ar <= 6.0:
+                    target_ar = 4.5 if ar >= 3.0 else 2.0
+                    score = area / (abs(ar - target_ar) + 0.5)
+                    candidates.append((score, [x, y, x + w, y + h]))
+                    
+            if candidates:
+                candidates.sort(key=lambda c: c[0], reverse=True)
+                return [c[1] for c in candidates], "heuristic"
+            else:
+                return [[0, 0, frame.shape[1], frame.shape[0]]], "heuristic"
 
-    def detect_plates_in_vehicle(self, frame: np.ndarray, vehicle_bbox: list) -> list:
+    def detect_plates_in_vehicle(self, frame: np.ndarray, vehicle_bbox: list) -> Tuple[list, str]:
         """
         Given a vehicle bbox, crop it and detect plates within it.
         Returned bboxes are in original frame coordinates.
@@ -118,7 +147,15 @@ class ALPRPipeline:
         plate_region_y = y1 + int((y2 - y1) * 0.65)
         vehicle_crop = frame[plate_region_y:y2, x1:x2]
 
-        plate_bboxes_local = self.detect_plates(vehicle_crop)
+        plate_bboxes_local, tier = self.detect_plates(vehicle_crop)
+        
+        # Tier 3: Robustness fallback
+        if not plate_bboxes_local and tier == "trained_model":
+            old_model = self.plate_model
+            self.plate_model = None
+            plate_bboxes_local, tier = self.detect_plates(vehicle_crop)
+            self.plate_model = old_model
+
         # Convert back to original frame coords
         plate_bboxes = []
         for pb in plate_bboxes_local:
@@ -126,7 +163,7 @@ class ALPRPipeline:
                 pb[0] + x1, pb[1] + plate_region_y,
                 pb[2] + x1, pb[3] + plate_region_y,
             ])
-        return plate_bboxes
+        return plate_bboxes, tier
 
     # ── Image preprocessing ───────────────────────────────────────────────────
 
@@ -165,24 +202,24 @@ class ALPRPipeline:
     # ── OCR ───────────────────────────────────────────────────────────────────
 
     def _ocr_plate(self, crop: np.ndarray) -> Tuple[str, float]:
-        """Run PaddleOCR and return (raw_text, avg_confidence)."""
+        """Run EasyOCR and return (raw_text, avg_confidence)."""
         ocr = _get_ocr()
 
-        # PaddleOCR expects BGR or RGB — convert thresh back to BGR 3-channel
-        if len(crop.shape) == 2:
-            crop_bgr = cv2.cvtColor(crop, cv2.COLOR_GRAY2BGR)
-        else:
-            crop_bgr = crop
-
-        result = ocr.ocr(crop_bgr, cls=True)
+        # EasyOCR accepts numpy arrays directly. Grayscale or BGR is fine.
+        # We can pass the crop directly without conversion.
+        try:
+            result = ocr.readtext(crop)
+        except Exception:
+            result = []
 
         texts = []
         confidences = []
-        if result and result[0]:
-            for line in result[0]:
-                if line and len(line) >= 2:
-                    text = line[1][0]
-                    conf = line[1][1]
+        if result:
+            for line in result:
+                # line is a tuple: (bbox, text, prob)
+                if len(line) >= 3:
+                    text = line[1]
+                    conf = line[2]
                     texts.append(text)
                     confidences.append(conf)
 
@@ -192,7 +229,7 @@ class ALPRPipeline:
 
     # ── Post-processing ───────────────────────────────────────────────────────
 
-    def _clean_plate(self, raw: str) -> str:
+    def _clean_plate(self, raw: str) -> Tuple[str, bool]:
         """
         Clean OCR output to extract a valid Indian plate number.
         Steps:
@@ -201,6 +238,7 @@ class ALPRPipeline:
                - Letter positions (0-1, 4-5): digits corrected to look-alike letters
                - Digit positions (2-3, 6-9): letters corrected to look-alike digits
           3. Regex match against Indian plate pattern
+        Returns (cleaned_plate, is_valid).
         """
         # Step 1: Remove noise characters, uppercase
         cleaned = re.sub(r"[^A-Z0-9]", "", raw.upper())
@@ -221,7 +259,7 @@ class ALPRPipeline:
                 # Must be digits (district code) — fix letters to digits
                 if ch in LETTER_TO_DIGIT:
                     corrected[i] = LETTER_TO_DIGIT[ch]
-            elif i >= len(cleaned) - 4:
+            elif i >= max(6, len(cleaned) - 4):
                 # Last 4 must be digits (serial number) — fix letters to digits
                 if ch in LETTER_TO_DIGIT:
                     corrected[i] = LETTER_TO_DIGIT[ch]
@@ -234,11 +272,11 @@ class ALPRPipeline:
         if match:
             plate = match.group(0).upper()
             if plate[:2] in STATE_CODES:
-                return plate
-            return plate  # return anyway; state may be valid but not in our list
+                return plate, True
+            return plate, True  # return anyway; state may be valid but not in our list
 
         # No match: return best-effort corrected text
-        return cleaned or "UNREADABLE"
+        return cleaned or "UNREADABLE", False
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -246,15 +284,52 @@ class ALPRPipeline:
         """
         Run the full OCR pipeline on an already-cropped plate image.
         """
+        h, w = crop.shape[:2]
+        ar = w / float(h) if h > 0 else 0
+        
         preprocessed = self._preprocess_plate(crop)
-        raw_text, conf = self._ocr_plate(preprocessed)
-        plate_number = self._clean_plate(raw_text)
+        
+        # Double-row detection (Tier 3)
+        if ar < 3.0 and h >= 30:
+            half = preprocessed.shape[0] // 2
+            top = preprocessed[:half, :]
+            bottom = preprocessed[half:, :]
+            raw_top, conf_top = self._ocr_plate(top)
+            raw_bottom, conf_bottom = self._ocr_plate(bottom)
+            raw_text = raw_top + " " + raw_bottom
+            conf = (conf_top + conf_bottom) / 2.0
+            raw_conf = conf
+            
+            # Dynamic Retry (Tier 3)
+            if conf < 0.5:
+                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+                rt, ct = self._ocr_plate(gray[:h//2, :])
+                rb, cb = self._ocr_plate(gray[h//2:, :])
+                conf2 = (ct + cb) / 2.0
+                if conf2 > conf:
+                    raw_text = rt + " " + rb
+                    conf = conf2
+        else:
+            raw_text, conf = self._ocr_plate(preprocessed)
+            raw_conf = conf
+            # Dynamic Retry (Tier 3)
+            if conf < 0.5:
+                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+                rt, ct = self._ocr_plate(gray)
+                if ct > conf:
+                    raw_text = rt
+                    conf = ct
+
+        plate_number, is_valid = self._clean_plate(raw_text)
         return PlateResult(
             raw_text=raw_text,
             plate_number=plate_number,
             confidence=conf,
             bbox=[],
             crop=crop,
+            detection_tier="",
+            ocr_confidence_raw=raw_conf,
+            plate_valid=is_valid
         )
 
     def read_plate_from_frame(
@@ -289,13 +364,19 @@ class ALPRPipeline:
         if frame is None:
             raise ValueError(f"Cannot read image: {image_path}")
 
-        plate_bboxes = self.detect_plates(frame)
+        plate_bboxes, tier = self.detect_plates(frame)
         if not plate_bboxes:
             # No plate detected → try reading whole image as plate crop
-            return self.read_plate_from_frame(frame, [0, 0, frame.shape[1], frame.shape[0]])
+            result = self.read_plate_from_frame(frame, [0, 0, frame.shape[1], frame.shape[0]])
+            if result:
+                result.detection_tier = tier
+            return result
 
         # Use highest-confidence plate bbox (first result from YOLO)
-        return self.read_plate_from_frame(frame, plate_bboxes[0])
+        result = self.read_plate_from_frame(frame, plate_bboxes[0])
+        if result:
+            result.detection_tier = tier
+        return result
 
 
 # ─── Quick test ───────────────────────────────────────────────────────────────
