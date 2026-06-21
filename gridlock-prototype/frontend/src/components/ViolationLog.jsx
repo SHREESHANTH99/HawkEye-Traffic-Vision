@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { readPlate } from '../api/client';
+import EvidenceRecord from './EvidenceRecord';
 import './ViolationLog.css';
 
 export default function ViolationLog({ violations, onClear }) {
@@ -59,51 +60,25 @@ export default function ViolationLog({ violations, onClear }) {
         </button>
       </div>
       
-      <div className="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Plate</th>
-              <th>Conf</th>
-              <th>Frame</th>
-              <th className="align-right">Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {violations.slice(0, 50).map((v, i) => {
-              const badgeClass = v.violation_type === 'NO_HELMET' ? 'badge-error' 
-                               : v.violation_type === 'TRIPLE_RIDING' ? 'badge-warning' 
-                               : 'badge-neutral';
-              return (
-                <tr key={i}>
-                  <td>
-                    <span className={`badge ${badgeClass}`}>
-                      {v.violation_type.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className={`mono plate-cell ${v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'plate-invalid' : ''}`} title={v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'Partial/Uncertain Read' : ''}>
-                    {v.plate_text}
-                    {v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid && (
-                      <span style={{color: '#ff4757', marginLeft: '4px'}}>*</span>
-                    )}
-                  </td>
-                  <td className="mono text-muted">{v.confidence.toFixed(2)}</td>
-                  <td className="mono text-muted">{v.frame_id}</td>
-                  <td className="mono time-col align-right">{v.timestamp.split(' ')[1]}</td>
-                </tr>
-              );
-            })}
-            {violations.length === 0 && (
-              <tr>
-                <td colSpan="5" className="empty-state">
-                  <div className="empty-icon">✓</div>
-                  <div>No violations logged yet</div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="log-list-wrapper">
+        {violations.slice(0, 50).map((v, i) => {
+          const record = {
+            id: i,
+            type: v.violation_type,
+            plateText: v.plate_text,
+            plateValid: v.plate_valid,
+            confidence: v.confidence,
+            timestamp: v.timestamp,
+            frameId: v.frame_id,
+          };
+          return <EvidenceRecord key={i} record={record} variant="compact" />;
+        })}
+        {violations.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-icon">✓</div>
+            <div>No violations logged yet</div>
+          </div>
+        )}
       </div>
 
       <div className="alpr-test-section">
@@ -129,8 +104,11 @@ export default function ViolationLog({ violations, onClear }) {
                 <span className="detail-val mono">{alprResult.raw_text}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">Corrected</span>
-                <span className="detail-val mono highlight-val">{alprResult.plate_number}</span>
+                <span className="detail-label">Plate</span>
+                <div className="plate-dossier-tag">
+                  <span className={`status-dot ${alprResult.plate_valid ? 'valid' : 'invalid'}`} title={alprResult.plate_valid ? 'Clean Read' : 'Partial Read'}></span>
+                  <span className={alprResult.plate_valid ? 'mono highlight-val' : 'mono text-muted'}>{alprResult.plate_number}</span>
+                </div>
               </div>
               <div className="detail-row">
                 <span className="detail-label">Confidence</span>

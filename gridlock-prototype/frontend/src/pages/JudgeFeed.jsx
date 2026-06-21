@@ -5,6 +5,7 @@ import {
   connectJudgeWebSocket,
   buildJudgeImageUrl,
 } from '../api/judgeClient';
+import EvidenceRecord from '../components/EvidenceRecord';
 import './JudgeFeed.css';
 
 export default function JudgeFeed() {
@@ -143,74 +144,46 @@ export default function JudgeFeed() {
         )}
 
         {!loading && error && violations.length === 0 && (
-          <div className="feed-empty-state">
-            <div className="feed-empty-icon">🔌</div>
-            <div className="feed-empty-title">Judge server not available</div>
+          <div className="feed-empty-state mono">
+            <div className="feed-empty-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <div className="feed-empty-title text-error">[ CONNECTION_FAILED ]</div>
             <div className="feed-empty-hint">
-              Start <code>hybrid_mvp/server.py</code> on port 8001, then run
-              <code>edge_client.py</code> to begin processing a video.
+              &gt; Judge server not available. <br/>
+              &gt; Start <code>hybrid_mvp/server.py</code> on port 8001.
             </div>
           </div>
         )}
 
         {!loading && !error && violations.length === 0 && (
-          <div className="feed-empty-state">
-            <div className="feed-empty-icon">📭</div>
-            <div className="feed-empty-title">No confirmed violations yet</div>
+          <div className="feed-empty-state mono">
+            <div className="feed-empty-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+            </div>
+            <div className="feed-empty-title">[ SYSTEM_LISTENING ]</div>
             <div className="feed-empty-hint">
-              Run <code>python hybrid_mvp/edge_client.py</code> against a video file to
-              populate this feed with LLM-confirmed violations.
+              &gt; Awaiting evidence from edge client...<br/>
+              &gt; Run <code>python hybrid_mvp/edge_client.py</code> to stream violations.
             </div>
           </div>
         )}
 
         {violations.length > 0 && (
           <div className="violation-grid">
-            {violations.map((v) => (
-              <div className="violation-card" key={v.id}>
-                <div className="vc-image-wrapper">
-                  {v.image_url ? (
-                    <img
-                      src={buildJudgeImageUrl(v.image_url)}
-                      alt={`${v.violation_type} evidence`}
-                      className="vc-image"
-                      loading="lazy"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  ) : (
-                    <div className="vc-image-placeholder">No image</div>
-                  )}
-                </div>
-                <div className="vc-details">
-                  <div className="vc-type-badge">
-                    {formatType(v.violation_type)}
-                  </div>
-                  <div className="vc-meta">
-                    <span className="vc-meta-item">
-                      <span className="vc-meta-label">Vehicle</span>
-                      <span className="vc-meta-value">{v.vehicle_id}</span>
-                    </span>
-                    <span className="vc-meta-item">
-                      <span className="vc-meta-label">Frame</span>
-                      <span className="vc-meta-value">{v.frame_id ?? '—'}</span>
-                    </span>
-                    <span className="vc-meta-item">
-                      <span className="vc-meta-label">Plate</span>
-                      <span className={`vc-meta-value mono ${v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'plate-invalid' : ''}`} title={v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'Partial/Uncertain Read' : ''}>
-                        {v.plate_text || '—'}
-                        {v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid && (
-                           <span style={{color: '#ff4757', marginLeft: '4px', fontSize: '1.1em'}}>*</span>
-                        )}
-                      </span>
-                    </span>
-                    <span className="vc-meta-item">
-                      <span className="vc-meta-label">Time</span>
-                      <span className="vc-meta-value">{formatTimestamp(v.timestamp)}</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {violations.map((v) => {
+              const record = {
+                id: v.id,
+                type: v.violation_type,
+                plateText: v.plate_text,
+                plateValid: v.plate_valid,
+                timestamp: v.timestamp,
+                frameId: v.frame_id,
+                vehicleId: v.vehicle_id,
+                imageUrl: v.image_url ? buildJudgeImageUrl(v.image_url) : null
+              };
+              return <EvidenceRecord key={v.id} record={record} variant="full" />;
+            })}
           </div>
         )}
       </div>

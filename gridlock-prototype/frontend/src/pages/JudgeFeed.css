@@ -162,29 +162,46 @@
 
 /* Empty states */
 .feed-empty-state {
-  text-align: center;
-  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  background-color: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
   color: var(--text-tertiary);
+  text-align: center;
+  min-height: 200px;
 }
 
 .feed-empty-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  opacity: 0.5;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: center;
 }
 
 .feed-empty-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.feed-empty-title.text-error {
+  color: var(--semantic-error);
 }
 
 .feed-empty-hint {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   max-width: 400px;
   margin: 0 auto;
+  text-align: left;
+  display: inline-block;
+  color: var(--text-secondary);
 }
 
 .feed-empty-hint code {
@@ -200,7 +217,7 @@
 .violation-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 20px;
   overflow-y: auto;
   flex: 1;
 }
