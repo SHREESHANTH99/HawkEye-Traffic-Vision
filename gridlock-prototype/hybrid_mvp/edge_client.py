@@ -118,7 +118,7 @@ CLS_LABEL = {
 CONF_THRESHOLD  = 0.30
 RESIZE_WIDTH    = 1280
 HEAD_PAD_RATIO  = 0.35      # extra upward padding for helmet crop (35%)
-MIN_VEH_PX      = 20        # minimum width OR height of vehicle box
+MIN_VEH_PX      = 40        # minimum width OR height of vehicle box
 PROCESS_EVERY_N = 3         # run YOLO every 3rd frame
 MEMORY_FRAMES   = 15        # frames to keep drawing a lost vehicle from memory
 
