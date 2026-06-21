@@ -139,14 +139,22 @@ def get_log_path() -> Path:
 def save_violation_to_csv(violation, plate_text="UNKNOWN"):
     """Append a single violation record to today's CSV log."""
     log_path = get_log_path()
+    
+    # Support both object/dataclass and dictionary formats
+    v_type = getattr(violation, "violation_type", None) or violation.get("violation_type")
+    v_conf = getattr(violation, "confidence", None) or violation.get("confidence", 0.0)
+    v_ts = getattr(violation, "timestamp", None) or violation.get("timestamp", "")
+    v_fid = getattr(violation, "frame_id", None) or violation.get("frame_id", 0)
+    v_img = getattr(violation, "image_path", None) or (violation.get("image_path") if isinstance(violation, dict) else None)
+    
     record = {
         "violation_id": f"V{datetime.now().strftime('%H%M%S%f')[:10]}",
         "plate_number": plate_text,
-        "violation_type": violation.violation_type,
-        "confidence": round(violation.confidence, 3),
-        "timestamp": violation.timestamp,
-        "frame_id": violation.frame_id,
-        "image_path": violation.image_path or "",
+        "violation_type": v_type,
+        "confidence": round(v_conf, 3),
+        "timestamp": v_ts,
+        "frame_id": v_fid,
+        "image_path": v_img or "",
     }
     df = pd.DataFrame([record])
     write_header = not log_path.exists()
