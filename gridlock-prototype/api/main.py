@@ -44,8 +44,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",   # Vite dev server
+        "http://localhost:5174",   # Vite fallback port
         "http://localhost:3000",   # CRA / alt dev server
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "http://127.0.0.1:3000",
     ],
     allow_credentials=True,
@@ -257,11 +259,28 @@ def _encode_jpeg(img: np.ndarray) -> bytes:
     return buf.tobytes()
 
 
-def _annotate(frame: np.ndarray, bikes: list, persons: list,
-              motor_vehs: list, violations: list) -> np.ndarray:
-    """Draw bounding boxes + labels on frame."""
+def _annotate(
+    frame: np.ndarray,
+    bikes: list,
+    persons: list,
+    motor_vehs: list,
+    violations: list,
+    known_violations: Optional[dict] = None,
+) -> np.ndarray:
+    """
+    Draw bounding boxes + labels on frame.
+    `known_violations` is a persistent dict {vehicle_id: violation_type} that
+    accumulates across all frames so previously confirmed vehicles keep their
+    highlight even on frames where they emit no new violation event.
+    """
     disp = frame.copy()
-    viol_types = {v["vehicle_id"]: v["violation_type"] for v in violations}
+    # Merge this frame's new violations into the running tally
+    if known_violations is not None:
+        for v in violations:
+            known_violations[v["vehicle_id"]] = v["violation_type"]
+    # Build per-frame lookup — use known_violations when available
+    viol_types = known_violations if known_violations is not None else \
+                 {v["vehicle_id"]: v["violation_type"] for v in violations}
 
     for p in persons:
         x1,y1,x2,y2 = [int(v) for v in p["box"]]
@@ -282,10 +301,13 @@ def _annotate(frame: np.ndarray, bikes: list, persons: list,
         vtype = viol_types.get(vid, "")
         if vtype == "NO_HELMET":
             color = _COLORS["NO_HELMET"]
-            tag   = f"{lbl}#{vid} NO HELMET"
+            tag   = f"{lbl}#{vid} NO HELMET ⚠"
+            # Draw thick alert border
+            cv2.rectangle(disp, (x1-2,y1-2), (x2+2,y2+2), color, 3)
         elif vtype == "TRIPLE_RIDING":
             color = _COLORS["TRIPLE_RIDING"]
-            tag   = f"{lbl}#{vid} TRIPLE!"
+            tag   = f"{lbl}#{vid} TRIPLE! ⚠"
+            cv2.rectangle(disp, (x1-2,y1-2), (x2+2,y2+2), color, 3)
         else:
             color = _COLORS["OK"]
             tag   = f"{lbl}#{vid}"
@@ -319,11 +341,16 @@ def _two_stage_process_frame(
     frame_id: int,
     model,
     confirmed_ids: set,
+    known_violations: Optional[dict] = None,
 ) -> tuple:
     """
     Run the two-stage detection on a single frame.
     Returns (annotated_frame, violations_this_frame).
-    confirmed_ids is a shared set to avoid re-flagging the same vehicle.
+
+    `confirmed_ids` is a shared set to avoid re-flagging the same vehicle.
+    `known_violations` is a shared dict {vehicle_id: violation_type} that persists
+    across ALL frames so previously confirmed vehicles keep their color box even
+    when they produce no new violation in the current frame.
     """
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -341,7 +368,7 @@ def _two_stage_process_frame(
     persons   : list = []
     bikes     : list = []
     motor_vehs: list = []
-    violations: list = []
+    violations: list = []   # NEW violations detected in this frame only
 
     if results and results[0].boxes is not None and len(results[0].boxes) > 0:
         res    = results[0]
@@ -421,8 +448,10 @@ def _two_stage_process_frame(
                         "_crop_bytes": cb,
                     })
 
-    annotated = _annotate(frame, bikes, persons, motor_vehs, violations)
-    return annotated, violations
+    # Draw with persistent known_violations so confirmed boxes stay colored
+    annotated = _annotate(frame, bikes, persons, motor_vehs, violations, known_violations)
+    # Return detection lists so the caller can cache them for skipped-frame annotation
+    return annotated, violations, bikes, persons, motor_vehs
 
 
 # ─── Pydantic response models ─────────────────────────────────────────────────
@@ -775,7 +804,12 @@ async def ws_detect_video(websocket: WebSocket):
         total_frames = max(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), 1)
         cap.release()
 
-        confirmed_ids: set = set()   # track which vehicles already flagged
+        confirmed_ids    : set  = set()   # vehicles already flagged (never re-flag)
+        known_violations : dict = {}      # {vehicle_id: violation_type} — persists all video
+        # Cache the last detected objects so we can annotate skipped frames too
+        _last_bikes     : list = []
+        _last_persons   : list = []
+        _last_motor_vehs: list = []
         frame_id = 0
 
         cap = cv2.VideoCapture(tmp_path)
@@ -792,21 +826,26 @@ async def ws_detect_video(websocket: WebSocket):
                     scale = 1280 / w0
                     frame = cv2.resize(frame, (1280, int(h0 * scale)))
 
-                # Skip frames for speed — still send every frame to browser
+                # Skip frames for speed — but STILL annotate with cached detections
+                # so bounding boxes don't flicker off between processed frames.
                 if frame_id % frame_skip != 0:
                     progress = round(min(frame_id / total_frames, 1.0), 4)
-                    payload  = {
+                    annotated_skip = _annotate(
+                        frame, _last_bikes, _last_persons, _last_motor_vehs, [], known_violations
+                    )
+                    payload = {
                         "frame_id": frame_id,
                         "progress": progress,
                         "violations": [],
-                        "annotated_image_b64": _frame_to_b64(frame),
+                        "annotated_image_b64": _frame_to_b64(annotated_skip),
                     }
                     await websocket.send_text(json.dumps(payload))
                     continue
 
-                annotated, violations = _two_stage_process_frame(
-                    frame, frame_id, model, confirmed_ids
-                )
+                annotated, violations, _last_bikes, _last_persons, _last_motor_vehs = \
+                    _two_stage_process_frame(
+                        frame, frame_id, model, confirmed_ids, known_violations
+                    )
 
                 # Bridge confirmed violations to Judge Feed
                 for v in violations:
