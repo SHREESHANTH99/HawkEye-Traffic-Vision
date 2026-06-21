@@ -12,5 +12,4 @@ torch>=2.0.0
 torchvision>=0.15.0
 
 # ALPR — Automatic License Plate Recognition
-paddleocr>=2.7.0
-paddlepaddle>=2.5.0
+easyocr>=1.7.0
