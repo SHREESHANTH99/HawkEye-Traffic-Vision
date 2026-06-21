@@ -41,6 +41,7 @@ VIOLATIONS_DIR.mkdir(parents=True, exist_ok=True)
 VALID_VIOLATIONS = {
     "HELMET_CHECK", "TRIPLE_RIDING", "SEATBELT_CHECK",
     "WRONG_WAY", "LANE_VIOLATION", "MOBILE_PHONE", "OVERLOADING",
+    "NO_HELMET"
 }
 
 # ── DATABASE ──────────────────────────────────────────────────────────────────

@@ -63,9 +63,9 @@ from pathlib import Path
 from ultralytics import YOLO
 
 # ── CONFIG ─────────────────────────────────────────────────────────────────
-VIDEO_PATH = "test_traffic.mp4"     # change to your video filename
+VIDEO_PATH = "hybrid_mvp/test_traffic.mp4"     # change to your video filename
 MODEL_PATH = "yolov8s.pt"           # COCO model for vehicles/persons
-SERVER_URL = "http://localhost:8000/api/violation"
+SERVER_URL = "http://localhost:8001/api/violation"
 
 # Helmet YOLO model — verified, working weights (see v7.0 note above).
 # Trained specifically on motorcycle riders: Bike_Rider / Helmet / No_Helmet.
@@ -118,7 +118,7 @@ CLS_LABEL = {
 CONF_THRESHOLD  = 0.30
 RESIZE_WIDTH    = 1280
 HEAD_PAD_RATIO  = 0.35      # extra upward padding for helmet crop (35%)
-MIN_VEH_PX      = 60        # minimum width OR height of vehicle box
+MIN_VEH_PX      = 20        # minimum width OR height of vehicle box
 PROCESS_EVERY_N = 3         # run YOLO every 3rd frame
 MEMORY_FRAMES   = 15        # frames to keep drawing a lost vehicle from memory
 
@@ -260,9 +260,9 @@ def parse_helmet_text(text: str) -> str:
     if not t.strip():
         return "SKIP"
     no  = any(k in t for k in _HELMET_NO)
+    if no: return "NO_HELMET"
     yes = any(k in t for k in _HELMET_YES)
-    if no and not yes:  return "NO_HELMET"
-    if yes and not no:  return "HELMET"
+    if yes: return "HELMET"
     return "SKIP"
 
 
