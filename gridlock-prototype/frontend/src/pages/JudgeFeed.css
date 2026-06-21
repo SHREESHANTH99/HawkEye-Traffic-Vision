@@ -1,0 +1,280 @@
+/* JudgeFeed.css — uses existing CSS variables from index.css */
+
+.judge-description {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.judge-description code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Connection bar */
+.connection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.conn-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.conn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.conn-indicator.connected .conn-dot {
+  background-color: var(--semantic-success);
+  box-shadow: 0 0 8px var(--semantic-success);
+}
+
+.conn-indicator.connected {
+  color: var(--semantic-success);
+}
+
+.conn-indicator.disconnected .conn-dot {
+  background-color: var(--text-tertiary);
+  box-shadow: none;
+}
+
+.conn-indicator.disconnected {
+  color: var(--text-tertiary);
+}
+
+.conn-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.conn-hint code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: var(--bg-elevated);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Judge KPI row */
+.judge-kpi-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.judge-kpi-card {
+  flex: 1;
+  min-width: 120px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.judge-kpi-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.judge-kpi-total {
+  border-color: var(--border-strong);
+}
+
+.judge-kpi-total .judge-kpi-value {
+  color: var(--accent-blue);
+}
+
+.judge-kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.judge-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.judge-kpi-empty {
+  border-style: dashed;
+}
+
+/* Feed section */
+.judge-feed-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.feed-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.feed-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Empty states */
+.feed-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-tertiary);
+}
+
+.feed-empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.feed-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.feed-empty-hint {
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.feed-empty-hint code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--bg-elevated);
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: var(--text-secondary);
+}
+
+/* Violation grid */
+.violation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.violation-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.violation-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.vc-image-wrapper {
+  width: 100%;
+  height: 160px;
+  background: var(--bg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.vc-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vc-image-placeholder {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.vc-details {
+  padding: 14px;
+}
+
+.vc-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--semantic-error-bg);
+  color: var(--semantic-error);
+  border: 1px solid rgba(255, 69, 58, 0.2);
+  margin-bottom: 12px;
+}
+
+.vc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vc-meta-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.vc-meta-label {
+  color: var(--text-tertiary);
+}
+
+.vc-meta-value {
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}

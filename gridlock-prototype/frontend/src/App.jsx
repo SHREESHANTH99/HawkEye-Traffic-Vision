@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import DetectionStudio from './pages/DetectionStudio';
 import Settings from './pages/Settings';
+import JudgeFeed from './pages/JudgeFeed';
 import './App.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/detect" element={<DetectionStudio />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/judge" element={<JudgeFeed />} />
             </Routes>
           </main>
         </div>

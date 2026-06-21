@@ -268,8 +268,8 @@ def health_check():
 if __name__ == "__main__":
     print("="*60)
     print("  HawkEye Traffic Analytics Server v2.0")
-    print("  http://localhost:8000")
-    print("  WebSocket: ws://localhost:8000/ws")
-    print("  API docs : http://localhost:8000/docs")
+    print("  http://localhost:8001")
+    print("  WebSocket: ws://localhost:8001/ws")
+    print("  API docs : http://localhost:8001/docs")
     print("="*60)
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="warning")

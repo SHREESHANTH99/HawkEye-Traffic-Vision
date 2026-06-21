@@ -38,6 +38,14 @@ export default function Sidebar() {
           <span className="nav-icon">⚙️</span>
           <span className="nav-label">Settings</span>
         </NavLink>
+
+        <NavLink 
+          to="/judge" 
+          className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
+        >
+          <span className="nav-icon">🧠</span>
+          <span className="nav-label">Judge Feed</span>
+        </NavLink>
       </nav>
       
       <div className="sidebar-footer" style={{ marginTop: 'auto' }}>
