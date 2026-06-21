@@ -42,7 +42,7 @@ def _get_ocr():
 
 # Covers: KA03MN5678 / MH12AB1234 / DL8CAB0001 / TN22V5678
 PLATE_PATTERN = re.compile(
-    r"[A-Z]{2}\s*[0-9]{1,2}\s*[A-Z]{1,3}\s*[0-9]{1,4}", re.IGNORECASE
+    r"[A-Z]{2}\s*[0-9]{1,2}\s*[A-Z]{1,3}\s*[0-9]{4}$", re.IGNORECASE
 )
 
 STATE_CODES = {
@@ -63,6 +63,7 @@ class PlateResult:
     crop: Optional[np.ndarray] = None  # cropped plate image
     detection_tier: str = ""
     ocr_confidence_raw: float = 0.0
+    plate_valid: bool = False  # True if plate passed regex validation
 
 
 # ─── ALPR Pipeline ────────────────────────────────────────────────────────────
@@ -228,7 +229,7 @@ class ALPRPipeline:
 
     # ── Post-processing ───────────────────────────────────────────────────────
 
-    def _clean_plate(self, raw: str) -> str:
+    def _clean_plate(self, raw: str) -> Tuple[str, bool]:
         """
         Clean OCR output to extract a valid Indian plate number.
         Steps:
@@ -237,6 +238,7 @@ class ALPRPipeline:
                - Letter positions (0-1, 4-5): digits corrected to look-alike letters
                - Digit positions (2-3, 6-9): letters corrected to look-alike digits
           3. Regex match against Indian plate pattern
+        Returns (cleaned_plate, is_valid).
         """
         # Step 1: Remove noise characters, uppercase
         cleaned = re.sub(r"[^A-Z0-9]", "", raw.upper())
@@ -257,7 +259,7 @@ class ALPRPipeline:
                 # Must be digits (district code) — fix letters to digits
                 if ch in LETTER_TO_DIGIT:
                     corrected[i] = LETTER_TO_DIGIT[ch]
-            elif i >= len(cleaned) - 4:
+            elif i >= max(6, len(cleaned) - 4):
                 # Last 4 must be digits (serial number) — fix letters to digits
                 if ch in LETTER_TO_DIGIT:
                     corrected[i] = LETTER_TO_DIGIT[ch]
@@ -270,11 +272,11 @@ class ALPRPipeline:
         if match:
             plate = match.group(0).upper()
             if plate[:2] in STATE_CODES:
-                return plate
-            return plate  # return anyway; state may be valid but not in our list
+                return plate, True
+            return plate, True  # return anyway; state may be valid but not in our list
 
         # No match: return best-effort corrected text
-        return cleaned or "UNREADABLE"
+        return cleaned or "UNREADABLE", False
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -318,7 +320,7 @@ class ALPRPipeline:
                     raw_text = rt
                     conf = ct
 
-        plate_number = self._clean_plate(raw_text)
+        plate_number, is_valid = self._clean_plate(raw_text)
         return PlateResult(
             raw_text=raw_text,
             plate_number=plate_number,
@@ -326,7 +328,8 @@ class ALPRPipeline:
             bbox=[],
             crop=crop,
             detection_tier="",
-            ocr_confidence_raw=raw_conf
+            ocr_confidence_raw=raw_conf,
+            plate_valid=is_valid
         )
 
     def read_plate_from_frame(

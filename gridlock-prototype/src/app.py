@@ -367,7 +367,7 @@ with left_col:
 
                 # ALPR on each violated vehicle
                 for v in violations:
-                    plate_bboxes = alpr.detect_plates_in_vehicle(frame, v.bbox)
+                    plate_bboxes, _ = alpr.detect_plates_in_vehicle(frame, v.bbox)
                     plate_text = "UNKNOWN"
                     if plate_bboxes:
                         result = alpr.read_plate_from_frame(frame, plate_bboxes[0])
@@ -448,7 +448,7 @@ with left_col:
 
                     # ALPR on violations
                     for v in violations:
-                        pb = alpr.detect_plates_in_vehicle(frame, v.bbox)
+                        pb, _ = alpr.detect_plates_in_vehicle(frame, v.bbox)
                         plate_text = "UNKNOWN"
                         if pb:
                             res = alpr.read_plate_from_frame(frame, pb[0])

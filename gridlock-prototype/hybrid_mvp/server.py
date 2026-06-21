@@ -28,7 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import (
-    Column, Integer, String, DateTime, create_engine, func
+    Column, Integer, String, DateTime, Boolean, create_engine, func
 )
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -58,6 +58,8 @@ class ViolationLog(Base):
     vehicle_id     = Column(String(32),  nullable=False)
     frame_id       = Column(Integer,     nullable=True)
     image_path     = Column(String(256), nullable=True)
+    plate_text     = Column(String(64),  nullable=True)
+    plate_valid    = Column(Boolean,     default=False)
     timestamp      = Column(DateTime,    default=datetime.utcnow, index=True)
 
 
@@ -119,6 +121,8 @@ async def receive_violation(
     violation_type: str = Form(...),
     vehicle_id:     str = Form(...),
     frame_id:       str = Form("0"),
+    plate_text:     str = Form("UNKNOWN"),
+    plate_valid:    str = Form("false"),
     image:          UploadFile = File(...),
 ) -> JSONResponse:
     """
@@ -150,6 +154,8 @@ async def receive_violation(
             vehicle_id=str(vehicle_id),
             frame_id=int(frame_id) if frame_id.isdigit() else None,
             image_path=rel_url,
+            plate_text=plate_text,
+            plate_valid=(plate_valid.lower() == "true"),
             timestamp=ts,
         )
         db.add(record)
@@ -171,6 +177,8 @@ async def receive_violation(
         "violation_type": violation_type,
         "vehicle_id":     str(vehicle_id),
         "frame_id":       frame_id,
+        "plate_text":     plate_text,
+        "plate_valid":    (plate_valid.lower() == "true"),
         "image_url":      rel_url,
         "timestamp":      ts.isoformat(),
     }
@@ -218,6 +226,8 @@ def get_violations(limit: int = 50, offset: int = 0) -> JSONResponse:
                 "violation_type": r.violation_type,
                 "vehicle_id":     r.vehicle_id,
                 "frame_id":       r.frame_id,
+                "plate_text":     r.plate_text,
+                "plate_valid":    r.plate_valid,
                 "image_url":      r.image_path,
                 "timestamp":      r.timestamp.isoformat() if r.timestamp else None,
             }

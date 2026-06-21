@@ -62,6 +62,14 @@ import time
 from pathlib import Path
 from ultralytics import YOLO
 
+import os
+if __package__ is None or __package__ == "":
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    from src.alpr import ALPRPipeline
+except ImportError:
+    ALPRPipeline = None
+
 # ── CONFIG ─────────────────────────────────────────────────────────────────
 VIDEO_PATH = "hybrid_mvp/test_traffic.mp4"     # change to your video filename
 MODEL_PATH = "yolov8s.pt"           # COCO model for vehicles/persons
@@ -307,13 +315,14 @@ def save_confirmed(vehicle_id: int, violation_type: str,
 
 
 def post_to_server(vehicle_id: int, violation_type: str,
-                    crop_bytes: bytes, frame_id: int) -> None:
+                    crop_bytes: bytes, frame_id: int, plate_text: str = "UNKNOWN", plate_valid: bool = False) -> None:
     try:
         resp = requests.post(
             SERVER_URL,
             files={"image": ("crop.jpg", io.BytesIO(crop_bytes), "image/jpeg")},
             data={"vehicle_id": str(vehicle_id), "violation_type": violation_type,
-                  "frame_id": str(frame_id)},
+                  "frame_id": str(frame_id), "plate_text": plate_text,
+                  "plate_valid": str(plate_valid).lower()},
             timeout=4.0,
         )
         v = resp.json().get("verdict", "?") if resp.status_code == 200 else f"HTTP{resp.status_code}"
@@ -323,17 +332,44 @@ def post_to_server(vehicle_id: int, violation_type: str,
 
 
 def confirm_violation(vehicle_id: int, violation_type: str, crop_bytes: bytes, frame_id: int,
-                       confirmed_set: set, lock: threading.Lock, counters: dict) -> bool:
+                       confirmed_set: set, lock: threading.Lock, counters: dict, alpr=None) -> bool:
     with lock:
         key = (vehicle_id, violation_type)
         if key in confirmed_set:
             return False
         confirmed_set.add(key)
         counters["confirmed"] += 1
+    plate_text = "UNKNOWN"
+    plate_valid = False
+    if alpr is not None:
+        try:
+            crop_img = cv2.imdecode(np.frombuffer(crop_bytes, np.uint8), cv2.IMREAD_COLOR)
+            # Crop is already the vehicle. We find plates within this crop.
+            # But the crop is scaled up by `enhance_crop` to 224px.
+            # ALPR detection heuristic expects the original image, but let's try it.
+            # Wait, `detect_plates` expects a frame, and `detect_plates_in_vehicle` takes a frame and a bbox.
+            # Since we only have the `crop_img`, we can just call `detect_plates(crop_img)`.
+            # But plates are usually in the lower 35%.
+            h, w = crop_img.shape[:2]
+            plate_region_y = int(h * 0.65)
+            lower_crop = crop_img[plate_region_y:h, 0:w]
+            plate_bboxes, _ = alpr.detect_plates(lower_crop)
+            if plate_bboxes:
+                # plate_bboxes are relative to lower_crop.
+                pb = plate_bboxes[0]
+                pb[1] += plate_region_y
+                pb[3] += plate_region_y
+                res = alpr.read_plate_from_frame(crop_img, pb)
+                if res:
+                    plate_text = res.plate_number
+                    plate_valid = res.plate_valid
+        except Exception as exc:
+            print(f"  [ALPR ERR] {exc}")
+
     save_confirmed(vehicle_id, violation_type, crop_bytes, frame_id)
     save_review_image(vehicle_id, violation_type, crop_bytes, frame_id, "CONFIRMED")
-    post_to_server(vehicle_id, violation_type, crop_bytes, frame_id)
-    print(f"  [★ CONFIRMED] {violation_type} id={vehicle_id} f={frame_id}")
+    post_to_server(vehicle_id, violation_type, crop_bytes, frame_id, plate_text, plate_valid)
+    print(f"  [★ CONFIRMED] {violation_type} id={vehicle_id} f={frame_id} plate={plate_text}")
     return True
 
 
@@ -342,7 +378,7 @@ def confirm_violation(vehicle_id: int, violation_type: str, crop_bytes: bytes, f
 def process_ai_item(item: tuple, helmet_model, no_helmet_ids: set, helmet_ids: set,
                      confirmed_set: set, confirmed_lock: threading.Lock,
                      vid_status: dict, status_lock: threading.Lock,
-                     counters: dict, counters_lock: threading.Lock) -> None:
+                     counters: dict, counters_lock: threading.Lock, alpr=None) -> None:
     vehicle_id, violation_type, crop_bytes, frame_id = item
     if violation_type != "HELMET_CHECK":
         return
@@ -362,7 +398,7 @@ def process_ai_item(item: tuple, helmet_model, no_helmet_ids: set, helmet_ids: s
 
     if verdict == "NO_HELMET":
         confirmed = confirm_violation(vehicle_id, "NO_HELMET", crop_bytes, frame_id,
-                                       confirmed_set, confirmed_lock, counters)
+                                       confirmed_set, confirmed_lock, counters, alpr)
         if confirmed:
             with status_lock:
                 vid_status[vehicle_id] = "NO_HELMET"
@@ -375,7 +411,7 @@ def process_ai_item(item: tuple, helmet_model, no_helmet_ids: set, helmet_ids: s
 def queue_worker(q: queue.Queue, helmet_model, no_helmet_ids: set, helmet_ids: set,
                   confirmed_set: set, confirmed_lock: threading.Lock,
                   vid_status: dict, status_lock: threading.Lock,
-                  counters: dict, counters_lock: threading.Lock) -> None:
+                  counters: dict, counters_lock: threading.Lock, alpr=None) -> None:
     while True:
         item = q.get()
         if item is _STOP:
@@ -384,7 +420,7 @@ def queue_worker(q: queue.Queue, helmet_model, no_helmet_ids: set, helmet_ids: s
         try:
             process_ai_item(item, helmet_model, no_helmet_ids, helmet_ids,
                              confirmed_set, confirmed_lock,
-                             vid_status, status_lock, counters, counters_lock)
+                             vid_status, status_lock, counters, counters_lock, alpr)
         except Exception as exc:
             print(f"  [WORKER ERR] {exc}")
         finally:
@@ -501,13 +537,17 @@ def main() -> None:
     scanned_ids    : set            = set()   # every unique vehicle ID ever seen
 
     ai_queue = queue.Queue()
+    alpr = None
+    if ALPRPipeline is not None:
+        alpr = ALPRPipeline()
+
     worker   = threading.Thread(
         target=queue_worker,
         args=(ai_queue, helmet_model, no_helmet_ids, helmet_ids,
               confirmed_set, confirmed_lock,
               vid_status, status_lock,
-              counters, counters_lock),
-        daemon=False,
+              counters, counters_lock, alpr),
+        daemon=True,
     )
     worker.start()
 
@@ -626,15 +666,10 @@ def main() -> None:
                 with confirmed_lock:
                     key = (vid, "TRIPLE_RIDING")
                     if key not in confirmed_set:
-                        confirmed_set.add(key)
-                        with counters_lock:
-                            counters["confirmed"] += 1
                         try:
                             cb = encode_jpeg(crop_region(frame, box))
-                            save_confirmed(vid, "TRIPLE_RIDING", cb, frame_id)
-                            save_review_image(vid, "TRIPLE_RIDING", cb, frame_id, "GEO")
-                            post_to_server(vid, "TRIPLE_RIDING", cb, frame_id)
-                            print(f"  [★] TRIPLE_RIDING id={vid}")
+                            # confirm_violation handles locking, ALPR, and DB submission
+                            confirm_violation(vid, "TRIPLE_RIDING", cb, frame_id, confirmed_set, confirmed_lock, counters, alpr)
                         except Exception as e:
                             print(f"  [ERR] triple: {e}")
                 with status_lock:

@@ -195,6 +195,15 @@ export default function JudgeFeed() {
                       <span className="vc-meta-value">{v.frame_id ?? '—'}</span>
                     </span>
                     <span className="vc-meta-item">
+                      <span className="vc-meta-label">Plate</span>
+                      <span className={`vc-meta-value mono ${v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'plate-invalid' : ''}`} title={v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid ? 'Partial/Uncertain Read' : ''}>
+                        {v.plate_text || '—'}
+                        {v.plate_text && v.plate_text !== 'UNKNOWN' && !v.plate_valid && (
+                           <span style={{color: '#ff4757', marginLeft: '4px', fontSize: '1.1em'}}>*</span>
+                        )}
+                      </span>
+                    </span>
+                    <span className="vc-meta-item">
                       <span className="vc-meta-label">Time</span>
                       <span className="vc-meta-value">{formatTimestamp(v.timestamp)}</span>
                     </span>
