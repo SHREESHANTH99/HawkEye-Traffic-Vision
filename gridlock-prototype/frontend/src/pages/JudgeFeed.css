@@ -129,16 +129,12 @@
   border-style: dashed;
 }
 
-/* Feed section */
+/* Feed section — grows with content, page scroll handles overflow */
 .judge-feed-section {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 24px;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 .feed-header {
@@ -213,13 +209,11 @@
   color: var(--text-secondary);
 }
 
-/* Violation grid */
+/* Violation grid — no internal scroll, page scrolls naturally */
 .violation-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  overflow-y: auto;
-  flex: 1;
 }
 
 .violation-card {

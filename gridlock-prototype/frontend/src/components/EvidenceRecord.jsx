@@ -24,10 +24,17 @@ export default function EvidenceRecord({ record, variant = 'compact' }) {
     return type.replace(/_/g, ' ');
   };
 
-  const badgeClass = record.type === 'NO_HELMET' ? 'badge-error' 
-                   : record.type === 'TRIPLE_RIDING' ? 'badge-warning' 
-                   : record.type === 'SIGNAL_JUMP' ? 'badge-warning'
+  const badgeClass = record.type === 'NO_HELMET'     ? 'badge-error'
+                   : record.type === 'TRIPLE_RIDING'  ? 'badge-warning'
+                   : record.type === 'SIGNAL_JUMP'    ? 'badge-warning'
+                   : record.type === 'SEATBELT_CHECK' ? 'badge-warning'
                    : 'badge-neutral';
+
+  const accentBorder = record.type === 'NO_HELMET'     ? '#ef4444'
+                     : record.type === 'TRIPLE_RIDING'  ? '#f59e0b'
+                     : record.type === 'SIGNAL_JUMP'    ? '#f59e0b'
+                     : record.type === 'SEATBELT_CHECK' ? '#f59e0b'
+                     : '#444';
 
   const formatTime = (ts) => {
     if (!ts) return '—';
@@ -41,38 +48,62 @@ export default function EvidenceRecord({ record, variant = 'compact' }) {
     }
   };
 
+  /* ── COMPACT: single flat row, no card chrome ────────────────────────── */
+  if (isCompact) {
+    return (
+      <div className="er-log-row" style={{ borderLeftColor: accentBorder }}>
+        <span className={`er-type-badge ${badgeClass}`}>{formatType(record.type)}</span>
+        <span className="er-log-plate mono">
+          {record.plateText && record.plateText !== 'UNKNOWN' && record.plateText !== 'UNREADABLE'
+            ? record.plateText
+            : <span className="er-log-no-plate">— no plate —</span>}
+        </span>
+        <span className="er-log-time mono">{formatTime(record.timestamp)}</span>
+        {record.frameId !== undefined && record.frameId !== null && (
+          <span className="er-log-frame mono">f{record.frameId}</span>
+        )}
+      </div>
+    );
+  }
+
+  /* ── FULL: card with image + metadata ────────────────────────────────── */
   return (
-    <div className={`evidence-record ${isCompact ? 'compact' : 'full'}`}>
+    <div className="evidence-record full">
       <div className="er-header">
         <span className={`er-type-badge ${badgeClass}`}>{formatType(record.type)}</span>
-        {record.confidence !== undefined && !isCompact && (
+        {record.confidence !== undefined && (
           <span className="er-confidence mono">{(record.confidence * 100).toFixed(1)}%</span>
         )}
       </div>
 
       <div className="er-content">
-        {!isCompact && (
-          <div className="er-media">
-            {record.imageUrl ? (
-              <img 
-                src={record.imageUrl} 
-                alt={`${record.type} evidence`} 
+        <div className="er-media">
+          {record.imageUrl ? (
+            <>
+              <img
+                src={record.imageUrl}
+                alt={`${record.type} evidence`}
                 className="er-image"
                 loading="lazy"
-                onError={(e) => { e.target.style.display = 'none'; }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const ph = e.target.nextSibling;
+                  if (ph) ph.style.display = 'flex';
+                }}
               />
-            ) : (
-              <div className="er-image-placeholder mono">NO IMAGE</div>
-            )}
-          </div>
-        )}
+              <div className="er-image-placeholder mono" style={{ display: 'none' }}>NO IMAGE</div>
+            </>
+          ) : (
+            <div className="er-image-placeholder mono">NO IMAGE</div>
+          )}
+        </div>
 
         <div className="er-metadata">
           <div className="er-meta-row">
             <span className="er-meta-label">PLATE</span>
             {record.plateText && record.plateText !== 'UNKNOWN' ? (
               <div className="plate-dossier-tag">
-                <span className={`status-dot ${record.plateValid ? 'valid' : 'invalid'}`} title={record.plateValid ? 'Clean Read' : 'Partial/Uncertain Read'}></span>
+                <span className={`status-dot ${record.plateValid ? 'valid' : 'invalid'}`} />
                 <span className={`mono ${record.plateValid ? '' : 'text-muted'}`}>{record.plateText}</span>
               </div>
             ) : (
@@ -92,7 +123,7 @@ export default function EvidenceRecord({ record, variant = 'compact' }) {
             </div>
           )}
 
-          {record.vehicleId && !isCompact && (
+          {record.vehicleId && (
             <div className="er-meta-row">
               <span className="er-meta-label">VEHICLE ID</span>
               <span className="er-meta-value mono">{record.vehicleId}</span>

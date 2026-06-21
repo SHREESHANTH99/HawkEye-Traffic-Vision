@@ -8,6 +8,8 @@
   flex-direction: column;
   box-shadow: var(--shadow-sm);
   max-width: 450px;
+  min-height: 0;        /* allow flex child to shrink properly */
+  overflow: hidden;     /* clip children so nothing bleeds out */
 }
 
 .log-header {
@@ -53,6 +55,32 @@
   margin-bottom: 24px;
   max-height: 400px;
   background: var(--bg-base);
+}
+
+/* Live Log card list — scrollable, height-constrained */
+.log-list-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;   /* room for scrollbar */
+  margin-bottom: 16px;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.log-list-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+.log-list-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.log-list-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 2px;
 }
 
 
