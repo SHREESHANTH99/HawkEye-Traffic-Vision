@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { SettingsProvider } from './contexts/SettingsContext';
-import Sidebar from './components/Sidebar';
+import TopNav from './components/TopNav';
 import Dashboard from './pages/Dashboard';
 import DetectionStudio from './pages/DetectionStudio';
 import Settings from './pages/Settings';
@@ -13,8 +13,7 @@ function App() {
     <SettingsProvider>
       <BrowserRouter>
         <div className="app-container">
-          <Sidebar />
-          
+          <TopNav />
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Dashboard />} />

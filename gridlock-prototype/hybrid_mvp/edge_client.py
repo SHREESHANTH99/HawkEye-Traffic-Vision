@@ -495,7 +495,7 @@ def main() -> None:
     alpr = None
 
     if ALPRPipeline is not None:
-        alpr = ALPRPipeline()
+        alpr = ALPRPipeline(plate_model_path="models/plate_yolov8.pt")
 
     worker   = threading.Thread(
         target=queue_worker,

@@ -47,7 +47,6 @@ export default function JudgeFeed() {
           setStats(prev => ({ ...prev, ...statsUpdate }));
         }
         if (violationEvent) {
-          // A new violation arrived live — refresh data
           fetchData();
         }
         setWsConnected(true);
@@ -58,7 +57,6 @@ export default function JudgeFeed() {
     );
     wsRef.current = conn;
 
-    // Check connection state periodically
     const stateCheck = setInterval(() => {
       if (conn.getState && conn.getState() === WebSocket.OPEN) {
         setWsConnected(true);
@@ -78,33 +76,21 @@ export default function JudgeFeed() {
 
   const formatType = (type) => type.replace(/_/g, ' ');
 
-  const formatTimestamp = (ts) => {
-    if (!ts) return '—';
-    try {
-      const d = new Date(ts);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    } catch {
-      return ts;
-    }
-  };
-
   return (
     <div className="page-container">
-      <h2 className="page-title">LLM Judge Feed</h2>
-      <p className="judge-description">
-        This feed shows violations confirmed by the local vision-language model (Ollama) after
-        initial detection — run <code>edge_client.py</code> against a video file to populate it.
-      </p>
+      <div className="dashboard-header-band">
+        <h2 className="dashboard-title">LLM JUDGE FEED</h2>
+      </div>
 
       {/* Connection status */}
-      <div className="connection-bar">
-        <div className={`conn-indicator ${wsConnected ? 'connected' : 'disconnected'}`}>
+      <div className={`connection-banner ${wsConnected ? 'connected' : 'disconnected'}`}>
+        <div className="conn-indicator">
           <div className="conn-dot"></div>
-          <span>{wsConnected ? 'Live — connected to judge server' : 'Disconnected — judge server not reachable'}</span>
+          <span className="conn-text">{wsConnected ? 'SYSTEM ONLINE — CONNECTED TO JUDGE SERVER' : 'OFFLINE — JUDGE SERVER NOT REACHABLE'}</span>
         </div>
         {!wsConnected && !loading && (
           <span className="conn-hint">
-            Start the judge server with: <code>uvicorn server:app --port 8001 --app-dir hybrid_mvp</code>
+            Ensure backend is running: <code>uvicorn hybrid_mvp.server:app --port 8001</code>
           </span>
         )}
       </div>
@@ -112,19 +98,19 @@ export default function JudgeFeed() {
       {/* KPI row */}
       <div className="judge-kpi-row">
         <div className="judge-kpi-card judge-kpi-total">
-          <div className="judge-kpi-value">{total}</div>
-          <div className="judge-kpi-label">Total Confirmed</div>
+          <div className="judge-kpi-value mono">{total}</div>
+          <div className="judge-kpi-label govt-badge">Total Confirmed</div>
         </div>
         {statEntries.map(([type, count]) => (
           <div className="judge-kpi-card" key={type}>
-            <div className="judge-kpi-value">{count}</div>
-            <div className="judge-kpi-label">{formatType(type)}</div>
+            <div className="judge-kpi-value mono">{count}</div>
+            <div className="judge-kpi-label govt-badge">{formatType(type)}</div>
           </div>
         ))}
         {statEntries.length === 0 && !loading && (
           <div className="judge-kpi-card judge-kpi-empty">
-            <div className="judge-kpi-value">—</div>
-            <div className="judge-kpi-label">No violations yet</div>
+            <div className="judge-kpi-value mono">—</div>
+            <div className="judge-kpi-label govt-badge">No violations yet</div>
           </div>
         )}
       </div>
@@ -132,58 +118,67 @@ export default function JudgeFeed() {
       {/* Violation feed */}
       <div className="judge-feed-section">
         <div className="feed-header">
-          <span className="feed-title">Confirmed Violations</span>
-          <span className="feed-count">{violations.length} records</span>
+          <span className="feed-title govt-badge">Confirmed Violations Log</span>
+          <span className="feed-count">{violations.length} RECORDS</span>
         </div>
 
         {loading && (
           <div className="feed-empty-state">
             <div className="feed-empty-icon">⏳</div>
-            <div>Loading judge feed…</div>
+            <div>LOADING JUDGE FEED...</div>
           </div>
         )}
 
         {!loading && error && violations.length === 0 && (
           <div className="feed-empty-state mono">
-            <div className="feed-empty-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            </div>
             <div className="feed-empty-title text-error">[ CONNECTION_FAILED ]</div>
             <div className="feed-empty-hint">
               &gt; Judge server not available. <br/>
-              &gt; Start <code>hybrid_mvp/server.py</code> on port 8001.
+              &gt; Start server on port 8001.
             </div>
           </div>
         )}
 
         {!loading && !error && violations.length === 0 && (
           <div className="feed-empty-state mono">
-            <div className="feed-empty-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-            </div>
             <div className="feed-empty-title">[ SYSTEM_LISTENING ]</div>
             <div className="feed-empty-hint">
               &gt; Awaiting evidence from edge client...<br/>
-              &gt; Run <code>python hybrid_mvp/edge_client.py</code> to stream violations.
+              &gt; Run edge_client.py to stream violations.
             </div>
           </div>
         )}
 
         {violations.length > 0 && (
-          <div className="violation-grid">
-            {violations.map((v) => {
-              const record = {
-                id: v.id,
-                type: v.violation_type,
-                plateText: v.plate_text,
-                plateValid: v.plate_valid,
-                timestamp: v.timestamp,
-                frameId: v.frame_id,
-                vehicleId: v.vehicle_id,
-                imageUrl: v.image_url ? buildJudgeImageUrl(v.image_url) : null
-              };
-              return <EvidenceRecord key={v.id} record={record} variant="full" />;
-            })}
+          <div className="table-wrapper">
+            <table className="violation-table">
+              <thead>
+                <tr>
+                  <th>EVIDENCE</th>
+                  <th>TYPE</th>
+                  <th>PLATE</th>
+                  <th>CONFIDENCE</th>
+                  <th>TIME</th>
+                  <th>FRAME</th>
+                </tr>
+              </thead>
+              <tbody>
+                {violations.map((v) => {
+                  const record = {
+                    id: v.id,
+                    type: v.violation_type,
+                    plateText: v.plate_text,
+                    plateValid: v.plate_valid,
+                    confidence: v.confidence,
+                    timestamp: v.timestamp,
+                    frameId: v.frame_id,
+                    vehicleId: v.vehicle_id,
+                    imageUrl: v.image_url ? buildJudgeImageUrl(v.image_url) : null
+                  };
+                  return <EvidenceRecord key={v.id} record={record} variant="full" />;
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

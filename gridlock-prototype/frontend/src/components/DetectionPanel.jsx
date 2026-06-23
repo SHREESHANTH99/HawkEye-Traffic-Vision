@@ -129,16 +129,15 @@ export default function DetectionPanel({ settings, onViolationsUpdate }) {
   return (
     <div className="detection-panel">
       <div className="panel-header">
-        <div className="panel-title">Detection Interface</div>
+        <div className="panel-title govt-badge">Detection Interface</div>
         {processingVideo && (
           <button className="btn-stop" onClick={stopProcessing} title="Stop processing">
-            ⏹ Stop
+            STOP
           </button>
         )}
         {(resultImage || error) && !processingVideo && (
-          <button className="btn-icon reset-btn" onClick={resetAll}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.41"/></svg>
-            <span>Upload Another</span>
+          <button className="reset-btn" onClick={resetAll}>
+            UPLOAD ANOTHER
           </button>
         )}
       </div>

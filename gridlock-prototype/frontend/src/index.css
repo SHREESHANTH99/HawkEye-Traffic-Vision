@@ -1,35 +1,16 @@
 :root {
-  /* Color Palette: Precision & Institutional Restraint */
-  --bg-base: #111518;
-  --bg-surface: #191E23;
-  --bg-card: #20262B;
-  --bg-elevated: #2C353C;
-  
-  --text-primary: #E2E8F0;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #64748B;
-  
-  --border-subtle: #2C353C;
-  --border-strong: #334155;
-  --border-focus: #475569;
-  
-  /* Status Semantics */
-  --status-confirmed: #EF4444;
-  --status-pending: #F59E0B;
-  --status-valid: #10B981;
-  
-  /* Legacy/fallback semantics (mapped to strict status colors) */
-  --semantic-error: var(--status-confirmed);
-  --semantic-error-bg: rgba(239, 68, 68, 0.1);
-  --semantic-warning: var(--status-pending);
-  --semantic-warning-bg: rgba(245, 158, 11, 0.1);
-  --semantic-success: var(--status-valid);
-  --semantic-success-bg: rgba(16, 185, 129, 0.1);
-  
-  /* Shadows - Minimalist/Flat approach */
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-glow: none;
+  /* 1. PALETTE - Government Institutional Portal */
+  --bg-base: #F0F4F8;
+  --bg-surface: #FFFFFF;
+  --color-institutional: #1B365D;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --accent-primary: #2563EB;
+  --status-confirmed: #B91C1C;
+  --status-valid: #15803D;
+
+  /* Minimal functional borders derived from surface/text */
+  --border-color: #D1D5DB;
 }
 
 * {
@@ -40,26 +21,26 @@
 
 body {
   font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 14px;
   background-color: var(--bg-base);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar for a sleek look */
+/* Custom Scrollbar minimal */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 4px;
+  background: var(--border-color);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-tertiary);
+  background: var(--text-secondary);
 }
 
 button {
@@ -78,14 +59,31 @@ input, select, textarea {
   font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
 }
 
-.plate-dossier-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  padding: 4px 8px;
-  border-radius: 4px;
+/* Global Table Style - Government tabular look */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.govt-badge {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .status-dot {
@@ -93,6 +91,7 @@ input, select, textarea {
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+  display: inline-block;
 }
 
 .status-dot.valid {
@@ -100,5 +99,5 @@ input, select, textarea {
 }
 
 .status-dot.invalid {
-  background-color: var(--status-pending);
+  background-color: var(--status-confirmed);
 }

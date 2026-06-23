@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSettings } from '../contexts/SettingsContext';
-import '../components/Sidebar.css';
+import './Settings.css';
 
 export default function Settings() {
   const { settings, setSettings, handleClearLog } = useSettings();
@@ -12,7 +12,7 @@ export default function Settings() {
 
   return (
     <div className="page-container" style={{ maxWidth: '600px', width: '100%', margin: '0 auto' }}>
-      <h2 className="page-title">Configuration & Rules</h2>
+      <h2 className="page-title govt-badge">Configuration & Rules</h2>
       
       <div className="settings-panel">
         <div className="section-header">
@@ -20,32 +20,30 @@ export default function Settings() {
         </div>
         
         <div className="control-group">
-          <div className="slider-header">
+          <div className="setting-header">
             <label>Confidence Threshold</label>
-            <span className="slider-value">{settings.confThreshold.toFixed(2)}</span>
+            <span className="setting-value mono">{settings.confThreshold.toFixed(2)}</span>
           </div>
           <input 
             type="range" 
-            className="custom-slider"
+            className="native-slider"
             min="0.1" max="0.9" step="0.05"
             value={settings.confThreshold}
             onChange={(e) => handleChange('confThreshold', parseFloat(e.target.value))}
-            style={{ '--val': `${((settings.confThreshold - 0.1) / 0.8) * 100}%` }}
           />
         </div>
 
-        <div className="control-group" style={{ marginBottom: 0 }}>
-          <div className="slider-header">
+        <div className="control-group">
+          <div className="setting-header">
             <label>Overlap Threshold</label>
-            <span className="slider-value">{settings.overlapThreshold.toFixed(2)}</span>
+            <span className="setting-value mono">{settings.overlapThreshold.toFixed(2)}</span>
           </div>
           <input 
             type="range" 
-            className="custom-slider"
+            className="native-slider"
             min="0.1" max="0.8" step="0.05"
             value={settings.overlapThreshold}
             onChange={(e) => handleChange('overlapThreshold', parseFloat(e.target.value))}
-            style={{ '--val': `${((settings.overlapThreshold - 0.1) / 0.7) * 100}%` }}
           />
         </div>
       </div>
@@ -55,32 +53,33 @@ export default function Settings() {
           <span>Violation Rules</span>
         </div>
         
-        <label className="custom-checkbox">
+        <label className="native-checkbox-label">
           <input 
             type="checkbox" 
+            className="native-checkbox"
             checked={settings.checkHelmet}
             onChange={(e) => handleChange('checkHelmet', e.target.checked)}
           />
-          <span className="checkmark"></span>
           <span className="label-text">No Helmet Detection</span>
         </label>
 
-        <label className="custom-checkbox">
+        <label className="native-checkbox-label">
           <input 
             type="checkbox" 
+            className="native-checkbox"
             checked={settings.checkTriple}
             onChange={(e) => handleChange('checkTriple', e.target.checked)}
           />
-          <span className="checkmark"></span>
           <span className="label-text">Triple Riding Detection</span>
         </label>
 
         {settings.checkTriple && (
           <div className="control-group child-control">
-            <label>Triple Riding Threshold</label>
+            <label className="sub-label">Triple Riding Threshold</label>
             <div className="number-input-wrapper">
               <input 
                 type="number" 
+                className="native-number"
                 min="2" max="5" 
                 value={settings.tripleThreshold}
                 onChange={(e) => handleChange('tripleThreshold', parseInt(e.target.value, 10))}
@@ -90,13 +89,13 @@ export default function Settings() {
           </div>
         )}
 
-        <label className="custom-checkbox" style={{ marginBottom: 0 }}>
+        <label className="native-checkbox-label" style={{ marginBottom: 0 }}>
           <input 
             type="checkbox" 
+            className="native-checkbox"
             checked={settings.checkSignal}
             onChange={(e) => handleChange('checkSignal', e.target.checked)}
           />
-          <span className="checkmark"></span>
           <span className="label-text">Signal Jump Detection</span>
         </label>
       </div>
@@ -106,7 +105,7 @@ export default function Settings() {
           <span>Input Mode</span>
         </div>
         
-        <div className="segmented-control">
+        <div className="native-segmented-control">
           <button 
             className={settings.inputMode === 'image' ? 'active' : ''}
             onClick={() => handleChange('inputMode', 'image')}
@@ -130,9 +129,9 @@ export default function Settings() {
             setCleared(true);
             setTimeout(() => setCleared(false), 2000);
           }}
-          style={{ borderColor: cleared ? 'var(--semantic-success)' : '', color: cleared ? 'var(--semantic-success)' : '' }}
+          style={{ borderColor: cleared ? 'var(--status-valid)' : '', color: cleared ? 'var(--status-valid)' : '' }}
         >
-          {cleared ? '✓ Server Logs Cleared' : 'Permanently Clear Server Log Data'}
+          {cleared ? '✓ SERVER LOGS CLEARED' : 'PERMANENTLY CLEAR SERVER LOG DATA'}
         </button>
       </div>
     </div>

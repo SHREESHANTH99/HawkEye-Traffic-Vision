@@ -1,5 +1,6 @@
 .app-container {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -8,56 +9,35 @@
 
 .main-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 32px 40px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 32px;
   overflow-y: auto;
   position: relative;
 }
-
-
 
 .page-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  position: relative;
-  z-index: 1;
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 32px;
-  letter-spacing: -0.5px;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.panels-container {
-  display: flex;
-  gap: 24px;
-  flex: 1;
-  min-height: 0;
-  z-index: 1;
-}
-
-/* Ensure children respect z-index */
-.kpi-row, .panels-container {
-  position: relative;
-  z-index: 1;
-}
-
-/* Reusing some classes for Settings.jsx */
+/* Common form styles for Settings */
 .settings-panel {
   background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 32px;
+  border: 1px solid var(--border-color);
+  padding: 24px 32px;
   margin-bottom: 24px;
-}
-
-.section {
-  margin-bottom: 32px;
 }
 
 .section-header {
@@ -65,7 +45,7 @@
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   margin-bottom: 16px;
   display: flex;
   align-items: center;
@@ -75,7 +55,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--border-subtle);
+  background: var(--border-color);
   margin-left: 12px;
 }
 
@@ -83,241 +63,29 @@
   margin-bottom: 20px;
 }
 
-.slider-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.slider-header label {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.slider-value {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-primary);
-  background: var(--border-strong);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Custom Slider */
-.custom-slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 4px;
-  background: var(--border-strong);
-  border-radius: 2px;
-  outline: none;
-  position: relative;
-}
-
-.custom-slider::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: var(--val);
-  background: var(--text-primary);
-  border-radius: 2px;
-  pointer-events: none;
-}
-
-.custom-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #ffffff;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  position: relative;
-  z-index: 2;
-  transition: transform 0.1s;
-}
-
-.custom-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-
-/* Custom Checkbox */
-.custom-checkbox {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-  cursor: pointer;
-  position: relative;
-  padding-left: 28px;
-}
-
-.custom-checkbox input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkmark {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  height: 16px;
-  width: 16px;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.custom-checkbox:hover .checkmark {
-  border-color: var(--text-tertiary);
-}
-
-.custom-checkbox input:checked ~ .checkmark {
-  background-color: var(--text-primary);
-  border-color: var(--text-primary);
-}
-
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-  left: 5px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
-  border: solid var(--bg-base);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.custom-checkbox input:checked ~ .checkmark:after {
-  display: block;
-}
-
-.label-text {
-  font-size: 13px;
-  color: var(--text-secondary);
-  transition: color 0.2s;
-}
-
-.custom-checkbox input:checked ~ .label-text {
-  color: var(--text-primary);
-}
-
-/* Child Control */
-.child-control {
-  margin-left: 28px;
-  margin-top: -4px;
-  margin-bottom: 16px;
-  padding-left: 12px;
-  border-left: 1px solid var(--border-strong);
-}
-
-.child-control label {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-bottom: 6px;
-  display: block;
-}
-
-.number-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.number-input-wrapper input {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-strong);
-  color: var(--text-primary);
-  padding: 6px 40px 6px 10px;
-  border-radius: 6px;
-  width: 100px;
-  font-size: 13px;
-  transition: border-color 0.2s;
-}
-
-.number-input-wrapper input:focus {
-  border-color: var(--text-secondary);
-}
-
-.number-suffix {
-  position: absolute;
-  right: 8px;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  pointer-events: none;
-}
-
-/* Segmented Control */
-.segmented-control {
-  display: flex;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  padding: 2px;
-}
-
-.segmented-control button {
-  flex: 1;
-  padding: 8px 0;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.segmented-control button.active {
-  background: var(--border-strong);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-strong);
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: var(--border-strong);
-  color: var(--text-primary);
-}
-
 .btn-destructive {
-  background: transparent;
+  background: var(--bg-surface);
   color: var(--semantic-error);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--semantic-error);
   padding: 12px;
-  border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  transition: all 0.2s;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .btn-destructive:hover {
-  background: var(--semantic-error-bg);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--bg-base);
 }
 
 .w-full {
   width: 100%;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 16px;
+  }
 }

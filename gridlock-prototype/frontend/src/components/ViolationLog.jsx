@@ -52,40 +52,56 @@ export default function ViolationLog({ violations, onClear }) {
   };
 
   return (
-    <div className="violation-log-panel">
-      <div className="log-header">
-        <div className="log-title">Live Log</div>
-        <button className="btn-export" onClick={exportCSV} disabled={violations.length === 0}>
-          Export CSV
-        </button>
+    <div className="violation-log-container">
+      <div className="log-section">
+        <div className="log-header">
+          <div className="log-title govt-badge">Live Violation Log</div>
+          <button className="btn-export" onClick={exportCSV} disabled={violations.length === 0}>
+            EXPORT CSV
+          </button>
+        </div>
+        
+        <div className="table-wrapper">
+          <table className="violation-table">
+            <thead>
+              <tr>
+                <th>TYPE</th>
+                <th>PLATE</th>
+                <th>TIME</th>
+                <th>FRAME</th>
+              </tr>
+            </thead>
+            <tbody>
+              {violations.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="empty-cell">No violations logged yet</td>
+                </tr>
+              ) : (
+                violations.slice(0, 50).map((v, i) => {
+                  const record = {
+                    id: i,
+                    type: v.violation_type,
+                    plateText: v.plate_text,
+                    plateValid: v.plate_valid,
+                    confidence: v.confidence,
+                    timestamp: v.timestamp,
+                    frameId: v.frame_id,
+                  };
+                  return <EvidenceRecord key={i} record={record} variant="compact" />;
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-      
-      <div className="log-list-wrapper">
-        {violations.slice(0, 50).map((v, i) => {
-          const record = {
-            id: i,
-            type: v.violation_type,
-            plateText: v.plate_text,
-            plateValid: v.plate_valid,
-            confidence: v.confidence,
-            timestamp: v.timestamp,
-            frameId: v.frame_id,
-          };
-          return <EvidenceRecord key={i} record={record} variant="compact" />;
-        })}
-        {violations.length === 0 && (
-          <div className="empty-state">
-            <div className="empty-icon">✓</div>
-            <div>No violations logged yet</div>
-          </div>
-        )}
-      </div>
+
+      <hr className="section-divider" />
 
       <div className="alpr-test-section">
         <div className="alpr-header">
-          <div className="alpr-title">ALPR Quick Test</div>
+          <div className="alpr-title govt-badge">ALPR Quick Test</div>
           <label className="btn-upload">
-            Select Crop
+            SELECT CROP
             <input type="file" accept="image/*" onChange={handleAlprUpload} className="hidden-input" />
           </label>
         </div>
@@ -100,18 +116,18 @@ export default function ViolationLog({ violations, onClear }) {
             </div>
             <div className="alpr-details">
               <div className="detail-row">
-                <span className="detail-label">Raw</span>
+                <span className="detail-label">RAW</span>
                 <span className="detail-val mono">{alprResult.raw_text}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">Plate</span>
+                <span className="detail-label">PLATE</span>
                 <div className="plate-dossier-tag">
                   <span className={`status-dot ${alprResult.plate_valid ? 'valid' : 'invalid'}`} title={alprResult.plate_valid ? 'Clean Read' : 'Partial Read'}></span>
                   <span className={alprResult.plate_valid ? 'mono highlight-val' : 'mono text-muted'}>{alprResult.plate_number}</span>
                 </div>
               </div>
               <div className="detail-row">
-                <span className="detail-label">Confidence</span>
+                <span className="detail-label">CONFIDENCE</span>
                 <span className="detail-val mono">{(alprResult.confidence * 100).toFixed(1)}%</span>
               </div>
             </div>

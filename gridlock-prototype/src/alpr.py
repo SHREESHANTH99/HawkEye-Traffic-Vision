@@ -129,7 +129,14 @@ class ALPRPipeline:
                 if 1.5 <= ar <= 6.0:
                     target_ar = 4.5 if ar >= 3.0 else 2.0
                     score = area / (abs(ar - target_ar) + 0.5)
-                    candidates.append((score, [x, y, x + w, y + h]))
+                    # Expand the crop by 20% to prevent chopping off characters on the edges
+                    pad_x = int(w * 0.25)
+                    pad_y = int(h * 0.25)
+                    nx1 = max(0, x - pad_x)
+                    ny1 = max(0, y - pad_y)
+                    nx2 = min(frame.shape[1], x + w + pad_x)
+                    ny2 = min(frame.shape[0], y + h + pad_y)
+                    candidates.append((score, [nx1, ny1, nx2, ny2]))
                     
             if candidates:
                 candidates.sort(key=lambda c: c[0], reverse=True)

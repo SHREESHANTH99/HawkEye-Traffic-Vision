@@ -1,159 +1,130 @@
-/* JudgeFeed.css — uses existing CSS variables from index.css */
-
-.judge-description {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin-bottom: 24px;
-  line-height: 1.6;
-}
-
-.judge-description code {
-  font-family: 'JetBrains Mono', monospace;
-  background: var(--bg-elevated);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* Connection bar */
-.connection-bar {
+/* Connection banner */
+.connection-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+  padding: 12px 24px;
   margin-bottom: 24px;
-  padding: 12px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.connection-banner.connected {
+  background-color: var(--semantic-success-bg);
+  border-color: var(--status-valid);
+  color: var(--status-valid);
+}
+
+.connection-banner.disconnected {
+  background-color: var(--semantic-error-bg);
+  border-color: var(--status-confirmed);
+  color: var(--status-confirmed);
 }
 
 .conn-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
+  gap: 12px;
 }
 
 .conn-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  transition: background-color 0.3s, box-shadow 0.3s;
+  background-color: currentColor;
 }
 
-.conn-indicator.connected .conn-dot {
-  background-color: var(--semantic-success);
-  box-shadow: 0 0 8px var(--semantic-success);
-}
-
-.conn-indicator.connected {
-  color: var(--semantic-success);
-}
-
-.conn-indicator.disconnected .conn-dot {
-  background-color: var(--text-tertiary);
-  box-shadow: none;
-}
-
-.conn-indicator.disconnected {
-  color: var(--text-tertiary);
+.conn-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .conn-hint {
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .conn-hint code {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  background: var(--bg-elevated);
+  background: var(--bg-surface);
   padding: 2px 4px;
-  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 /* Judge KPI row */
 .judge-kpi-row {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--color-institutional);
+  width: 100%;
+  margin-bottom: 32px;
 }
 
 .judge-kpi-card {
   flex: 1;
-  min-width: 120px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--border-color);
   text-align: center;
-  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.judge-kpi-card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-sm);
-}
-
-.judge-kpi-total {
-  border-color: var(--border-strong);
-}
-
-.judge-kpi-total .judge-kpi-value {
-  color: var(--accent-blue);
+.judge-kpi-card:last-child {
+  border-right: none;
 }
 
 .judge-kpi-value {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 400;
   color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  margin-bottom: 6px;
+  line-height: 1.2;
+  margin-bottom: 4px;
 }
 
 .judge-kpi-label {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.judge-kpi-empty {
-  border-style: dashed;
+.judge-kpi-total {
+  background-color: #F8FAFC;
 }
 
-/* Feed section — grows with content, page scroll handles overflow */
+.judge-kpi-total .judge-kpi-value {
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+/* Feed section */
 .judge-feed-section {
   background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border: 1px solid var(--border-color);
   padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .feed-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
 }
 
 .feed-title {
   font-size: 14px;
-  font-weight: 600;
   color: var(--text-primary);
 }
 
 .feed-count {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* Empty states */
@@ -163,19 +134,11 @@
   align-items: center;
   justify-content: center;
   padding: 64px 24px;
-  background-color: var(--bg-card);
-  border: 1px dashed var(--border-strong);
-  border-radius: 8px;
-  color: var(--text-tertiary);
+  background-color: var(--bg-base);
+  border: 1px dashed var(--border-color);
+  color: var(--text-secondary);
   text-align: center;
   min-height: 200px;
-}
-
-.feed-empty-icon {
-  margin-bottom: 16px;
-  color: var(--text-secondary);
-  display: flex;
-  justify-content: center;
 }
 
 .feed-empty-title {
@@ -187,105 +150,38 @@
 }
 
 .feed-empty-title.text-error {
-  color: var(--semantic-error);
+  color: var(--status-confirmed);
 }
 
 .feed-empty-hint {
   font-size: 13px;
   line-height: 1.6;
-  max-width: 400px;
-  margin: 0 auto;
   text-align: left;
   display: inline-block;
   color: var(--text-secondary);
 }
 
-.feed-empty-hint code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  background: var(--bg-elevated);
-  padding: 2px 5px;
-  border-radius: 3px;
-  color: var(--text-secondary);
-}
-
-/* Violation grid — no internal scroll, page scrolls naturally */
-.violation-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.violation-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  overflow: hidden;
-  transition: border-color 0.2s, transform 0.15s;
-}
-
-.violation-card:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
-}
-
-.vc-image-wrapper {
-  width: 100%;
-  height: 160px;
-  background: var(--bg-base);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.vc-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.vc-image-placeholder {
-  font-size: 12px;
-  color: var(--text-tertiary);
-}
-
-.vc-details {
-  padding: 14px;
-}
-
-.vc-type-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: var(--semantic-error-bg);
-  color: var(--semantic-error);
-  border: 1px solid rgba(255, 69, 58, 0.2);
-  margin-bottom: 12px;
-}
-
-.vc-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.vc-meta-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-}
-
-.vc-meta-label {
-  color: var(--text-tertiary);
-}
-
-.vc-meta-value {
-  color: var(--text-secondary);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+@media (max-width: 768px) {
+  .judge-kpi-row {
+    flex-wrap: wrap;
+  }
+  
+  .judge-kpi-card {
+    flex: 0 0 50%;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .judge-kpi-card:nth-child(2n) {
+    border-right: none;
+  }
+  
+  .judge-kpi-card:nth-last-child(-n+2) {
+    border-bottom: none;
+  }
+  
+  .connection-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }

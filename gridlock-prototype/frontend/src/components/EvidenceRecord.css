@@ -1,166 +1,52 @@
-/* ── Full card (Judge Feed) ──────────────────────────────────────────────── */
-.evidence-record {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  overflow: hidden;
-  transition: border-color 0.2s ease;
+/* Table row specific styling, overriding general table styles if needed */
+.evidence-row:nth-child(even) {
+  background-color: #F8FAFC; /* very light grey zebra striping */
 }
 
-.evidence-record:hover {
-  border-color: var(--border-focus);
+.evidence-row:nth-child(odd) {
+  background-color: #FFFFFF;
 }
 
-.er-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  background-color: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--border-subtle);
+.evidence-row td {
+  padding: 10px 12px;
+  vertical-align: middle;
 }
 
-.er-type-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.badge-error {
-  background-color: var(--semantic-error-bg);
+.er-cell-type.status-confirmed {
   color: var(--status-confirmed);
-  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-.badge-warning {
-  background-color: var(--semantic-warning-bg);
-  color: var(--status-pending);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+.er-cell-plate {
+  font-weight: 500;
 }
 
-.badge-neutral {
-  background-color: var(--border-subtle);
+.text-secondary {
   color: var(--text-secondary);
 }
 
-.er-confidence {
-  font-size: 11px;
-  color: var(--text-secondary);
+.er-thumb {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
 }
 
-/* Image area — fixed height, image absolutely fills it */
-.er-media {
-  width: 100%;
-  height: 160px;
-  position: relative;
-  background-color: #111;
-  border-bottom: 1px solid var(--border-subtle);
-  overflow: hidden;
+.er-thumb:hover {
+  opacity: 0.8;
 }
 
-/* Absolute fill — guarantees image always occupies the box */
-.er-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background-color: #111;
-  display: block;
-}
-
-.er-image-placeholder {
-  position: absolute;
-  inset: 0;
+.er-thumb-placeholder {
+  width: 60px;
+  height: 40px;
+  background: var(--bg-base);
+  border: 1px dashed var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.er-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.er-metadata {
-  display: flex;
-  flex-direction: column;
-  padding: 12px 14px;
-  gap: 7px;
-}
-
-.er-meta-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.er-meta-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.er-meta-value {
-  font-size: 12px;
-  color: var(--text-primary);
-}
-
-/* ── Compact: flat log row (Dashboard Live Log) ──────────────────────────── */
-.er-log-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-left: 3px solid #ef4444; /* overridden inline per type */
-  border-radius: 6px;
-  min-height: 36px;
-  flex-shrink: 0;        /* do NOT let rows collapse */
-  transition: background-color 0.15s;
-}
-
-.er-log-row:hover {
-  background-color: rgba(255, 255, 255, 0.03);
-}
-
-.er-log-plate {
-  font-size: 12px;
+  font-size: 9px;
   color: var(--text-secondary);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.er-log-time {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.er-log-frame {
-  font-size: 10px;
-  color: var(--text-tertiary);
-  opacity: 0.7;
-  white-space: nowrap;
-}
-
-.er-log-no-plate {
-  color: var(--text-tertiary);
-  font-style: italic;
-  opacity: 0.6;
-  font-size: 11px;
+  border-radius: 2px;
 }

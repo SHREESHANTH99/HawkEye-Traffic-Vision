@@ -7,8 +7,8 @@ export default function DetectionStudio() {
 
   return (
     <div className="page-container">
-      <h2 className="page-title">Detection Studio</h2>
-      <div className="panels-container" style={{ maxWidth: '800px', width: '100%', margin: '0 auto' }}>
+      <h2 className="page-title govt-badge">Detection Studio</h2>
+      <div className="detection-studio-layout">
         <DetectionPanel 
           settings={settings} 
           onViolationsUpdate={handleViolationsUpdate} 

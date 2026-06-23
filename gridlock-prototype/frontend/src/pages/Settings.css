@@ -1,0 +1,115 @@
+.setting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.setting-header label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.setting-value {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.native-slider {
+  width: 100%;
+  accent-color: var(--color-institutional);
+  cursor: pointer;
+}
+
+.native-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  padding: 8px;
+  border: 1px solid transparent;
+}
+
+.native-checkbox-label:hover {
+  background-color: var(--bg-base);
+  border-color: var(--border-color);
+}
+
+.native-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-institutional);
+  cursor: pointer;
+}
+
+.label-text {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.child-control {
+  margin-left: 30px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-color);
+  margin-bottom: 20px;
+}
+
+.sub-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.number-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.native-number {
+  padding: 6px 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  width: 60px;
+}
+
+.number-suffix {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.native-segmented-control {
+  display: flex;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.native-segmented-control button {
+  flex: 1;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-base);
+  border-right: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.native-segmented-control button:last-child {
+  border-right: none;
+}
+
+.native-segmented-control button:hover {
+  background: #E2E8F0;
+}
+
+.native-segmented-control button.active {
+  background: var(--color-institutional);
+  color: #FFFFFF;
+}
