@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── Reset & Base ───────────────────────────────────────────────── */
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -43,12 +43,10 @@
       overflow-x: hidden;
     }
 
-    /* ── Scrollbar ─────────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-dark); }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
 
-    /* ── Animations ────────────────────────────────────────────────── */
     @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:.3; } }
     @keyframes slide-in  { from { opacity:0; transform:translateY(-18px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
     @keyframes glow-ring { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
@@ -58,14 +56,12 @@
       100% { background-position:  400px 0; }
     }
 
-    /* ── Layout ────────────────────────────────────────────────────── */
     .app {
       min-height: 100vh;
       display: grid;
       grid-template-rows: auto auto 1fr;
     }
 
-    /* ── Header ────────────────────────────────────────────────────── */
     header {
       padding: 20px 32px;
       display: flex;
@@ -146,7 +142,6 @@
       animation: pulse-dot 1.5s infinite;
     }
 
-    /* ── Stats Banner ─────────────────────────────────────────────── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -218,7 +213,6 @@
       margin-top: 6px;
     }
 
-    /* ── Main Content ─────────────────────────────────────────────── */
     .main-content {
       display: grid;
       grid-template-columns: 1fr 340px;
@@ -226,7 +220,6 @@
       min-height: 0;
     }
 
-    /* ── Violations Feed ──────────────────────────────────────────── */
     .feed-panel {
       padding: 24px 32px;
       overflow-y: auto;
@@ -263,7 +256,6 @@
     }
     .clear-btn:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
 
-    /* ── Violation Card ───────────────────────────────────────────── */
     .cards-container {
       display: flex;
       flex-direction: column;
@@ -351,7 +343,6 @@
       color: var(--text-dim);
     }
 
-    /* ── Sidebar ─────────────────────────────────────────────────── */
     .sidebar {
       padding: 24px;
       overflow-y: auto;
@@ -376,7 +367,6 @@
       margin-bottom: 14px;
     }
 
-    /* ── Mini bar chart ──────────────────────────────────────────── */
     .bar-row {
       display: flex;
       align-items: center;
@@ -416,7 +406,6 @@
       text-align: right;
     }
 
-    /* ── System Status ───────────────────────────────────────────── */
     .status-row {
       display: flex;
       align-items: center;
@@ -431,7 +420,6 @@
     .status-val   { font-family: 'JetBrains Mono', monospace; color: var(--accent-green); font-size: 11px; }
     .status-val.off { color: var(--accent-red); }
 
-    /* ── Empty state ─────────────────────────────────────────────── */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -441,7 +429,6 @@
     .empty-state .icon { font-size: 48px; margin-bottom: 14px; }
     .empty-state p { font-size: 13px; }
 
-    /* ── Responsive ─────────────────────────────────────────────── */
     @media (max-width: 900px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .main-content { grid-template-columns: 1fr; }
@@ -458,7 +445,6 @@
 <body>
 <div class="app">
 
-  <!-- ── Header ─────────────────────────────────────────────────── -->
   <header>
     <div class="logo">
       <div class="logo-icon">🦅</div>
@@ -476,7 +462,6 @@
     </div>
   </header>
 
-  <!-- ── Stats Grid ─────────────────────────────────────────────── -->
   <div class="stats-grid">
     <div class="stat-card triple">
       <div class="stat-label">
@@ -512,10 +497,8 @@
     </div>
   </div>
 
-  <!-- ── Main Content ───────────────────────────────────────────── -->
   <div class="main-content">
 
-    <!-- Feed -->
     <div class="feed-panel">
       <div class="panel-header">
         <div class="panel-title">
@@ -533,10 +516,8 @@
       </div>
     </div>
 
-    <!-- Sidebar -->
     <div class="sidebar">
 
-      <!-- Breakdown bar chart -->
       <div class="sidebar-section">
         <div class="sidebar-title">Violation Breakdown</div>
         <div id="bar-chart">
@@ -563,7 +544,6 @@
         </div>
       </div>
 
-      <!-- System status -->
       <div class="sidebar-section">
         <div class="sidebar-title">System Status</div>
         <div class="status-row">
@@ -592,12 +572,12 @@
         </div>
       </div>
 
-    </div><!-- /sidebar -->
-  </div><!-- /main-content -->
-</div><!-- /app -->
+    </div>
+  </div>
+</div>
 
 <script>
-  /* ── State ───────────────────────────────────────────────────────── */
+
   const counts = {
     TRIPLE_RIDING: 0,
     HELMET_CHECK:  0,
@@ -611,7 +591,6 @@
 
   document.getElementById('sys-start').textContent = sessionStart.toLocaleTimeString();
 
-  /* ── WebSocket ───────────────────────────────────────────────────── */
   function connect() {
     setWsStatus('connecting', 'Connecting…');
 
@@ -673,7 +652,6 @@
     lbl.textContent = label;
   }
 
-  /* ── Backend health check ────────────────────────────────────────── */
   async function checkBackend() {
     try {
       const res = await fetch('http://localhost:8000/health');
@@ -689,7 +667,6 @@
     }
   }
 
-  /* ── Init stats from server ──────────────────────────────────────── */
   function applyInitStats(stats) {
     Object.entries(stats).forEach(([type, cnt]) => {
       if (type in counts) {
@@ -702,11 +679,9 @@
     document.getElementById('sys-total').textContent = totalEvents;
   }
 
-  /* ── Handle incoming violation ───────────────────────────────────── */
   function handleViolation(msg) {
     const { violation_type, vehicle_id, image_url, timestamp } = msg;
 
-    // Increment counter
     if (violation_type in counts) {
       counts[violation_type]++;
       animateCounter(`cnt-${violation_type}`, counts[violation_type]);
@@ -715,25 +690,20 @@
     document.getElementById('sys-total').textContent = totalEvents;
     document.getElementById('feed-count').textContent = `${totalEvents} event${totalEvents !== 1 ? 's' : ''}`;
 
-    // Update bars
     updateBars();
 
-    // Remove empty state
     const empty = document.getElementById('empty-state');
     if (empty) empty.remove();
 
-    // Prepend violation card
     const card = buildCard(violation_type, vehicle_id, image_url, timestamp);
     const container = document.getElementById('cards-container');
     container.insertBefore(card, container.firstChild);
 
-    // Trim to last 100 cards
     while (container.children.length > 100) {
       container.removeChild(container.lastChild);
     }
   }
 
-  /* ── Build violation card DOM ────────────────────────────────────── */
   function buildCard(type, vehicleId, imageUrl, timestamp) {
     const card = document.createElement('div');
     card.className = 'v-card';
@@ -773,17 +743,15 @@
     return card;
   }
 
-  /* ── Animate counter ─────────────────────────────────────────────── */
   function animateCounter(id, targetVal) {
     const el = document.getElementById(id);
     if (!el) return;
     el.style.animation = 'none';
-    el.offsetHeight; // reflow
+    el.offsetHeight;
     el.style.animation = 'count-up 0.3s ease';
     el.textContent = targetVal;
   }
 
-  /* ── Update bar chart ────────────────────────────────────────────── */
   function updateBars() {
     const maxVal = Math.max(...Object.values(counts), 1);
     Object.entries(counts).forEach(([type, cnt]) => {
@@ -797,7 +765,6 @@
     });
   }
 
-  /* ── Clear feed ──────────────────────────────────────────────────── */
   function clearFeed() {
     const container = document.getElementById('cards-container');
     container.innerHTML = '';
@@ -809,7 +776,6 @@
     document.getElementById('feed-count').textContent = '0 events';
   }
 
-  /* ── Load existing violations from API on page load ─────────────── */
   async function loadExistingViolations() {
     try {
       const res = await fetch('http://localhost:8000/api/violations?limit=30');
@@ -828,12 +794,10 @@
     }
   }
 
-  /* ── Init ─────────────────────────────────────────────────────────── */
   connect();
   checkBackend();
   setTimeout(loadExistingViolations, 800);
 
-  // Periodic backend health check
   setInterval(checkBackend, 30000);
 </script>
 </body>
