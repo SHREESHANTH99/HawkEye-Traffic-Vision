@@ -22,7 +22,7 @@ except ImportError:
 
 VIDEO_PATH = "hybrid_mvp/test_traffic.mp4"
 MODEL_PATH = "yolov8s.pt"
-SERVER_URL = os.environ.get("SERVER_URL", "http://localhost:8001/api/violation")
+SERVER_URL = os.environ.get("SERVER_URL", "https://hawkeye-judge-backend.onrender.com/api/violation")
 HELMET_MODEL_URL   = "https://raw.githubusercontent.com/Viddesh1/Bike-Helmet-Detectionv2/main/weights/best.pt"
 HELMET_MODEL_LOCAL = Path("models") / "bike_helmet_yolov8.pt"
 HELMET_CONF        = 0.40
