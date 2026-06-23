@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: hawkeye-judge-backend
+    runtime: python
+    rootDir: gridlock-prototype
+    buildCommand: pip install -r hybrid_mvp/requirements.txt
+    startCommand: uvicorn hybrid_mvp.server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DB_PATH
+        value: /tmp/traffic_analytics.db
+      - key: STATIC_DIR
+        value: /tmp/static/violations
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  - type: web
+    name: hawkeye-detection-api
+    runtime: python
+    rootDir: gridlock-prototype
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: FRONTEND_URL
+        value: https://hawk-eye-traffic-vision.vercel.app
+      - key: PYTHON_VERSION
+        value: 3.11.0

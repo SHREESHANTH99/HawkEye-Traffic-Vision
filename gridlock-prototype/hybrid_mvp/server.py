@@ -47,7 +47,7 @@ class ViolationLog(Base):
 
 
 Base.metadata.create_all(bind=engine)
-print(f"[DB] SQLite ready: {Path(DB_PATH).resolve()}")
+print(f"[DB] SQLite ready: {Path(_db_path).resolve()}")
 app = FastAPI(
     title="HawkEye Traffic Analytics",
     description="Real-time traffic violation detection backend",
