@@ -11,5 +11,10 @@ kagglehub>=0.2.0
 torch>=2.0.0
 torchvision>=0.15.0
 
+# API / Networking
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+
 # ALPR — Automatic License Plate Recognition
 easyocr>=1.7.0

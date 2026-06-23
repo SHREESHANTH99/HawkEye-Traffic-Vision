@@ -33,10 +33,15 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-DB_PATH        = "traffic_analytics.db"
-STATIC_DIR     = Path("static")
-VIOLATIONS_DIR = STATIC_DIR / "violations"
-VIOLATIONS_DIR.mkdir(parents=True, exist_ok=True)
+import os
+
+_db_path = os.getenv("DB_PATH", "/app/data/traffic_analytics.db")
+os.makedirs(os.path.dirname(_db_path), exist_ok=True)
+DATABASE_URL = f"sqlite:///{_db_path}"
+
+_static_dir = os.getenv("STATIC_DIR", "/app/data/static/violations")
+os.makedirs(_static_dir, exist_ok=True)
+VIOLATIONS_DIR = Path(_static_dir)
 
 VALID_VIOLATIONS = {
     "HELMET_CHECK", "TRIPLE_RIDING", "SEATBELT_CHECK",
@@ -45,7 +50,7 @@ VALID_VIOLATIONS = {
 }
 
 # ── DATABASE ──────────────────────────────────────────────────────────────────
-engine  = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+engine  = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 Session = sessionmaker(bind=engine)
 Base    = declarative_base()
 
@@ -82,7 +87,7 @@ app.add_middleware(
 )
 
 # Mount static file directory — serves violation crop images
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/static/violations", StaticFiles(directory=_static_dir), name="static")
 
 
 # ── WEBSOCKET MANAGER ──────────────────────────────────────────────────────────
@@ -279,8 +284,8 @@ def health_check():
 if __name__ == "__main__":
     print("="*60)
     print("  HawkEye Traffic Analytics Server v2.0")
-    print("  http://localhost:8001")
-    print("  WebSocket: ws://localhost:8001/ws")
-    print("  API docs : http://localhost:8001/docs")
+    print("  http://0.0.0.0:8001")
+    print("  WebSocket: ws://0.0.0.0:8001/ws")
+    print("  API docs : http://0.0.0.0:8001/docs")
     print("="*60)
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="warning")

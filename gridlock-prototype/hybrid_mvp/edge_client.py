@@ -73,7 +73,7 @@ except ImportError:
 # ── CONFIG ─────────────────────────────────────────────────────────────────
 VIDEO_PATH = "hybrid_mvp/test_traffic.mp4"     # change to your video filename
 MODEL_PATH = "yolov8s.pt"           # COCO model for vehicles/persons
-SERVER_URL = "http://localhost:8001/api/violation"
+SERVER_URL = os.environ.get("SERVER_URL", "http://localhost:8001/api/violation")
 
 # Helmet YOLO model — verified, working weights (see v7.0 note above).
 # Trained specifically on motorcycle riders: Bike_Rider / Helmet / No_Helmet.
@@ -89,7 +89,7 @@ REVIEW_DIR.mkdir(exist_ok=True)
 # Moondream is ONLY used if the helmet YOLO model can't be loaded (no internet,
 # model not cached, etc). Set to False to fail hard instead of falling back.
 USE_MOONDREAM_FALLBACK = True
-OLLAMA_URL     = "http://localhost:11434/api/generate"
+OLLAMA_URL     = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL   = "moondream:latest"
 OLLAMA_TIMEOUT = 45.0
 _HELMET_PROMPT = (

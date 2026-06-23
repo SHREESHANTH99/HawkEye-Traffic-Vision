@@ -40,16 +40,23 @@ app = FastAPI(
     description="YOLOv8 + PaddleOCR violation detection REST and WebSocket API",
 )
 
+_origins = [
+    "http://localhost:5173",   # Vite dev server
+    "http://localhost:5174",   # Vite fallback port
+    "http://localhost:3000",   # CRA / alt dev server
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:3000",
+]
+_frontend_url = os.getenv("FRONTEND_URL")
+if _frontend_url:
+    _origins.append(_frontend_url)
+if os.getenv("CORS_ALLOW_ALL") == "true":
+    _origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",   # Vite dev server
-        "http://localhost:5174",   # Vite fallback port
-        "http://localhost:3000",   # CRA / alt dev server
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -95,7 +102,7 @@ _COLORS = {
     "SMALL":         (60, 60,  60),
 }
 
-JUDGE_SERVER = "http://localhost:8001/api/violation"
+JUDGE_SERVER = os.getenv("JUDGE_SERVER", "http://localhost:8001/api/violation")
 
 # ─── Lazy-loaded singletons ───────────────────────────────────────────────────
 
