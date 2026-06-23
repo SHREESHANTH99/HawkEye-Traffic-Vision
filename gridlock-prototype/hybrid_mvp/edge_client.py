@@ -25,7 +25,7 @@ MODEL_PATH = "yolov8s.pt"
 SERVER_URL = os.environ.get("SERVER_URL", "https://hawkeye-judge-backend.onrender.com/api/violation")
 HELMET_MODEL_URL   = "https://raw.githubusercontent.com/Viddesh1/Bike-Helmet-Detectionv2/main/weights/best.pt"
 HELMET_MODEL_LOCAL = Path("models") / "bike_helmet_yolov8.pt"
-HELMET_CONF        = 0.40
+HELMET_CONF        = 0.65
 CONFIRMED_DIR = Path("violations_local")
 REVIEW_DIR    = Path("violations_review")
 CONFIRMED_DIR.mkdir(exist_ok=True)
@@ -190,7 +190,7 @@ def check_helmet_yolo(helmet_model, crop_img: np.ndarray,
         results = helmet_model.predict(crop_img, conf=HELMET_CONF, verbose=False, imgsz=320)
 
         if not results or results[0].boxes is None or len(results[0].boxes) == 0:
-            return "NO_HELMET"
+            return "SKIP"
 
         boxes = results[0].boxes
         clses = boxes.cls.cpu().numpy().astype(int)
@@ -198,7 +198,7 @@ def check_helmet_yolo(helmet_model, crop_img: np.ndarray,
         relevant = [(c, cf) for c, cf in zip(clses, confs) if c in helmet_ids or c in no_helmet_ids]
 
         if not relevant:
-            return "NO_HELMET"
+            return "SKIP"
 
         best_cls = max(relevant, key=lambda x: x[1])[0]
         return "NO_HELMET" if best_cls in no_helmet_ids else "HELMET"
@@ -495,7 +495,7 @@ def main() -> None:
     alpr = None
 
     if ALPRPipeline is not None:
-        alpr = ALPRPipeline(plate_model_path="models/plate_yolov8.pt")
+        alpr = ALPRPipeline()
 
     worker   = threading.Thread(
         target=queue_worker,

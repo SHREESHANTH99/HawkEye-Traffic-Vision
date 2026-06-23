@@ -81,7 +81,7 @@ if not _HELMET_MODEL_LOCAL.parent.exists():
     _HELMET_MODEL_LOCAL = Path(__file__).parent.parent / "models" / "bike_helmet_yolov8.pt"
 _HELMET_MODEL_LOCAL.parent.mkdir(parents=True, exist_ok=True)
 
-_HELMET_CONF = 0.40
+_HELMET_CONF = 0.65
 _COCO_CONF   = 0.30
 _MIN_VEH_PX  = 40
 _HEAD_PAD    = 0.35   # 35% extra upward padding on crop
@@ -247,13 +247,13 @@ def _check_helmet(crop_img: np.ndarray) -> str:
     try:
         results = hmodel.predict(crop_img, conf=_HELMET_CONF, verbose=False, imgsz=320)
         if not results or results[0].boxes is None or len(results[0].boxes) == 0:
-            return "NO_HELMET"
+            return "SKIP"
         clses = results[0].boxes.cls.cpu().numpy().astype(int)
         confs = results[0].boxes.conf.cpu().numpy()
         relevant = [(c, cf) for c, cf in zip(clses, confs)
                     if c in _helmet_ids or c in _no_helmet_ids]
         if not relevant:
-            return "NO_HELMET"
+            return "SKIP"
         best = max(relevant, key=lambda x: x[1])[0]
         return "NO_HELMET" if best in _no_helmet_ids else "HELMET"
     except Exception as e:

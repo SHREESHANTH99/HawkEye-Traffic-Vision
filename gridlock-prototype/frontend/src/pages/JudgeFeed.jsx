@@ -4,6 +4,7 @@ import {
   fetchJudgeViolations,
   connectJudgeWebSocket,
   buildJudgeImageUrl,
+  clearJudgeLogs,
 } from '../api/judgeClient';
 import EvidenceRecord from '../components/EvidenceRecord';
 import './JudgeFeed.css';
@@ -14,6 +15,7 @@ export default function JudgeFeed() {
   const [wsConnected, setWsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [clearing, setClearing] = useState(false);
   const wsRef = useRef(null);
   const pollRef = useRef(null);
 
@@ -70,6 +72,18 @@ export default function JudgeFeed() {
       conn.close();
     };
   }, [fetchData]);
+  const handleClearLogs = async () => {
+    if (!window.confirm("Are you sure you want to delete all violation logs? This cannot be undone.")) return;
+    setClearing(true);
+    try {
+      await clearJudgeLogs();
+      await fetchData();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const statEntries = Object.entries(stats).filter(([key]) => key !== 'total');
   const total = stats.total || 0;
@@ -119,7 +133,25 @@ export default function JudgeFeed() {
       <div className="judge-feed-section">
         <div className="feed-header">
           <span className="feed-title govt-badge">Confirmed Violations Log</span>
-          <span className="feed-count">{violations.length} RECORDS</span>
+          <div className="feed-header-actions">
+             <span className="feed-count">{violations.length} RECORDS</span>
+             <button 
+               className="btn btn-sm govt-button-danger" 
+               onClick={handleClearLogs}
+               disabled={clearing || violations.length === 0}
+               style={{ 
+                 backgroundColor: 'var(--alert-red, #dc2626)', 
+                 color: 'white',
+                 border: 'none',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '6px',
+                 fontWeight: 'bold'
+               }}
+             >
+               {clearing ? '⏳ DELETING...' : '⚠️ DELETE ALL LOGS'}
+             </button>
+          </div>
         </div>
 
         {loading && (

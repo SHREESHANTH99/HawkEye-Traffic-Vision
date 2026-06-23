@@ -13,6 +13,12 @@ export async function fetchJudgeViolations(limit = 50, offset = 0) {
   return res.json();
 }
 
+export async function clearJudgeLogs() {
+  const res = await fetch(`${JUDGE_API_BASE}/api/violations`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to clear judge logs');
+  return res.json();
+}
+
 export function connectJudgeWebSocket(onStats, onError) {
   let ws;
   let pingInterval;

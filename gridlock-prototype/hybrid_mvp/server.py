@@ -247,8 +247,22 @@ async def websocket_endpoint(ws: WebSocket) -> None:
         manager.disconnect(ws)
 
 
-@app.get("/health")
+@app.delete("/api/violations")
+def delete_all_violations() -> JSONResponse:
+    db = Session()
+    try:
+        db.query(ViolationLog).delete()
+        db.commit()
+        for f in VIOLATIONS_DIR.glob("*.jpg"):
+            f.unlink(missing_ok=True)
+        return JSONResponse(content={"status": "cleared", "message": "All violations deleted."})
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(exc))
+    finally:
+        db.close()
 
+@app.get("/health")
 def health_check():
     return {"status": "ok", "model": "HawkEye v2.0"}
 
