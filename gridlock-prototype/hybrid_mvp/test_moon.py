@@ -1,13 +1,10 @@
 import requests, base64, cv2
-
 cap = cv2.VideoCapture('test_traffic.mp4')
 ret, frame = cap.read()
 cap.release()
-
 _, buf = cv2.imencode('.jpg', frame)
 b64 = base64.b64encode(buf.tobytes()).decode()
 print('b64 len:', len(b64))
-
 prompts = [
     'Describe what you see.',
     'What is in this image?',
@@ -16,7 +13,6 @@ prompts = [
     'Is the driver wearing a seatbelt?',
     'Look at this traffic image. Is any rider missing a helmet?',
 ]
-
 for prompt in prompts:
     resp = requests.post('http://localhost:11434/api/generate', json={
         'model': 'moondream:latest',
